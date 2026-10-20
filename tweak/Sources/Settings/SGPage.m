@@ -14,6 +14,11 @@ static BOOL sg_pagesConform;
 
 @implementation SGPage
 
+- (void)setTitle:(NSString *)title {
+    [super setTitle:SGLocalized(title)];
+}
+
+
 // Inset grouped cards on black, the way Settings draws them, a hairline between the rows of a card.
 - (void)viewDidLoad {
     [super viewDidLoad];

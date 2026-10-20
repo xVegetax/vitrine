@@ -329,16 +329,16 @@ UIViewController *SGRPlayerSettingsPage(NSArray *more) {
     SGRPlayerShowcase *showcase = [[SGRPlayerShowcase alloc] initWithFrame:CGRectMake(0, 0, 320, kCardMinHeight)];
     UISegmentedControl *backgrounds = [[UISegmentedControl alloc] initWithItems:SGRPlayerBackgroundNames()];
     backgrounds.selectedSegmentIndex = SGRPlayerBackground();
-    backgrounds.accessibilityLabel = @"Background";
+    backgrounds.accessibilityLabel = SGLocalized(@"Background");
     backgrounds.apportionsSegmentWidthsByContent = YES;
 
-    SGModRow *lowData = SGOptionRow(@"Download in Low Data Mode", @"Up to about 7 MB a song", SGKeyMotionLowData);
+    SGModRow *lowData = SGOptionRow(SGLocalized(@"Download in Low Data Mode"), SGLocalized(@"Up to about 7 MB a song"), SGKeyMotionLowData);
     lowData.visible = ^BOOL { return SGRPlayerBackground() == SGRPlayerBackgroundAnimated; };
     SGModRow *sources = SGMotionSourcesRow();
     sources.visible = lowData.visible;
 
     __block __weak UITableViewController *weakPage;
-    SGModRow *reset = SGActionRow(@"Reset", nil, ^{
+    SGModRow *reset = SGActionRow(SGLocalized(@"Reset"), nil, ^{
         SGRResetFluidSettings();
         [weakPage.tableView reloadData];   // the sliders at once, rather than at the page's next tick
     });
@@ -354,7 +354,7 @@ UIViewController *SGRPlayerSettingsPage(NSArray *more) {
         SGNotedSection(nil, fluid, @"Brightness above 100% can make white text harder to read. A paused song holds the "
                                    @"background still. Animated and Visualizer use these where they show Fluid."),
         SGNotedSection(@"Controls", @[SGSwitchRow(@"Volume", nil, SGRKeyPlayerVolume),
-                                      SGOptionRow(@"Follow the cover", nil, SGRKeyPlayerFollowsCover)],
+                                      SGOptionRow(SGLocalized(@"Follow the cover"), nil, SGRKeyPlayerFollowsCover)],
                        @"Volume puts a slider under the controls for this iPhone, or the speaker's while Spotify plays on another device. "
                        @"Follow the cover paints the like, shuffle and repeat in the color of the song playing."),
         SGNotedSection(@"Mini player", SGRNowPlayingBarRows(),
@@ -363,7 +363,7 @@ UIViewController *SGRPlayerSettingsPage(NSArray *more) {
     // Fluid, Animated and Visualizer share the field (PlayerMotion.x reads the choice on every track, PlayerVisualiser.m
     // on the field's layout); Still and Colors are a field of another kind, made once a launch (PlayerField.x).
     NSString *footer = @"Fluid, Animated and Visualizer change with the next song. Still, Colors and Hide on the player apply after you restart Spotify.";
-    SGRPlayerPage *page = [[SGRPlayerPage alloc] initWithTitle:@"Player" intro:nil sections:sections footer:footer];
+    SGRPlayerPage *page = [[SGRPlayerPage alloc] initWithTitle:SGLocalized(@"Player") intro:nil sections:sections footer:footer];
     weakPage = page;
     page.showcase = showcase;
     page.backgrounds = backgrounds;

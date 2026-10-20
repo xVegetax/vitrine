@@ -76,7 +76,7 @@ UIImageView *SGSymbolView(NSString *name, CGFloat size, UIImageSymbolWeight weig
 // A gray note in a wrapper view, for the table header and footer.
 UIView *SGNote(NSString *text) {
     UILabel *label = [UILabel new];
-    label.text = text;
+    label.text = SGLocalized(text);
     label.font = SGSubtitleFont();
     label.adjustsFontForContentSizeCategory = YES;
     label.textColor = SGGrey();
@@ -219,7 +219,7 @@ void SGFillCell(UITableViewCell *cell, NSString *title, NSString *subtitle, UICo
 
 UIView *SGSectionHeader(UITableView *table, NSString *title) {
     UILabel *label = [UILabel new];
-    label.text = title.uppercaseString;
+    label.text = SGLocalized(title).uppercaseString;
     label.font = SGSubtitleFont();
     label.adjustsFontForContentSizeCategory = YES;
     label.textColor = SGGrey();
@@ -246,7 +246,7 @@ static CGFloat footerTextHeight(UITableView *table, NSString *text) {
 
 UIView *SGSectionFooter(UITableView *table, NSString *text) {
     UILabel *label = [UILabel new];
-    label.text = text;
+    label.text = SGLocalized(text);
     label.font = SGSubtitleFont();
     label.adjustsFontForContentSizeCategory = YES;
     label.textColor = SGGrey();

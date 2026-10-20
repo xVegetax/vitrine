@@ -259,7 +259,7 @@ static UIFont *tabular(UIFont *font) {
     _detents = count > 0 && count <= 24;
     _title.font = SGTitleFont();
     _value.font = tabular(SGTitleFont());
-    _title.text = row.title;
+    _title.text = SGLocalized(row.title);
     _slider.minimumTrackTintColor = SGGreen();
     _slider.minimumValue = (float)range.min;
     _slider.maximumValue = (float)range.max;
@@ -357,7 +357,7 @@ static UIFont *tabular(UIFont *font) {
 
 - (UITableViewCell *)tableView:(UITableView *)table cellForRowAtIndexPath:(NSIndexPath *)path {
     UITableViewCell *cell = SGDequeueCell(table, @"choice");
-    SGFillCell(cell, _row.names[(NSUInteger)path.row], nil, nil, nil);
+    SGFillCell(cell, SGLocalized(_row.names[(NSUInteger)path.row]), nil, nil, nil);
     cell.selectionStyle = UITableViewCellSelectionStyleDefault;
     BOOL chosen = path.row == (NSInteger)lround(SGDSPNumber(_row.key));
     if (chosen) {
@@ -394,7 +394,7 @@ static UIFont *tabular(UIFont *font) {
 
 - (instancetype)init {
     if (!(self = [super initWithStyle:UITableViewStyleInsetGrouped])) return nil;
-    self.title = @"Audio effects";
+    self.title = SGLocalized(@"Audio effects");
     _effects = effects();
     _open = [NSMutableSet set];
     _errors = [NSMutableDictionary dictionary];
@@ -403,7 +403,7 @@ static UIFont *tabular(UIFont *font) {
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    _intro = SGNote(@"Changes apply straight away.");
+    _intro = SGNote(SGLocalized(@"Changes apply straight away."));
     self.tableView.tableHeaderView = _intro;
     [self buildCredits];
     self.tableView.tableFooterView = _credits;
@@ -548,7 +548,7 @@ static UIFont *tabular(UIFont *font) {
 
 // A row with no symbol, so its line fits beside the switch or chevron.
 - (void)fillHead:(UITableViewCell *)cell title:(NSString *)title subtitle:(NSString *)subtitle {
-    SGFillCell(cell, title, subtitle.length ? subtitle : nil, nil, nil);
+    SGFillCell(cell, SGLocalized(title), subtitle.length ? SGLocalized(subtitle) : nil, nil, nil);
     cell.separatorInset = UIEdgeInsetsMake(0, 16, 0, 0);
 }
 
@@ -622,7 +622,7 @@ static UIFont *tabular(UIFont *font) {
 // Red, the way Settings' warning rows are: the effect's last change did not take, and why.
 - (UITableViewCell *)errorCell:(UITableView *)table text:(NSString *)text {
     UITableViewCell *cell = SGDequeueCell(table, @"error");
-    SGFillCell(cell, @"Not applied", text, SGRed(), @"exclamationmark.triangle.fill");
+    SGFillCell(cell, SGLocalized(@"Not applied"), text, SGRed(), @"exclamationmark.triangle.fill");
     UIListContentConfiguration *content = (UIListContentConfiguration *)cell.contentConfiguration;
     content.secondaryTextProperties.color = SGRed();
     cell.contentConfiguration = content;
@@ -717,17 +717,17 @@ static UIFont *tabular(UIFont *font) {
 }
 
 - (void)confirmReset {
-    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Reset all effects?"
-        message:@"Every effect goes off, and every value, curve and file choice back to its default. The Effects switch and your imported files stay."
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:SGLocalized(@"Reset all effects?")
+        message:SGLocalized(@"Every effect goes off, and every value, curve and file choice back to its default. The Effects switch and your imported files stay.")
         preferredStyle:UIAlertControllerStyleAlert];
-    [alert addAction:[UIAlertAction actionWithTitle:@"Reset" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
+    [alert addAction:[UIAlertAction actionWithTitle:SGLocalized(@"Reset") style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
         SGDSPResetAll();
         [self readState];
         [UIView transitionWithView:self.tableView duration:0.25 options:UIViewAnimationOptionTransitionCrossDissolve animations:^{
             [self.tableView reloadData];
         } completion:nil];
     }]];
-    [alert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+    [alert addAction:[UIAlertAction actionWithTitle:SGLocalized(@"Cancel") style:UIAlertActionStyleCancel handler:nil]];
     [self presentViewController:alert animated:YES completion:nil];
 }
 

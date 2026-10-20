@@ -89,8 +89,8 @@ static void removeImported(void) {
 static void tell(NSString *title, NSString *message, BOOL restart) {
     UIAlertController *alert = [UIAlertController alertControllerWithTitle:title message:message preferredStyle:UIAlertControllerStyleAlert];
     if (restart) {
-        [alert addAction:[UIAlertAction actionWithTitle:@"Later" style:UIAlertActionStyleCancel handler:nil]];
-        [alert addAction:[UIAlertAction actionWithTitle:@"Restart now" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) { SGRestartSpotify(); }]];
+        [alert addAction:[UIAlertAction actionWithTitle:SGLocalized(@"Later") style:UIAlertActionStyleCancel handler:nil]];
+        [alert addAction:[UIAlertAction actionWithTitle:SGLocalized(@"Restart now") style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) { SGRestartSpotify(); }]];
     } else {
         [alert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleCancel handler:nil]];
     }
@@ -217,7 +217,7 @@ typedef NS_ENUM(NSInteger, SGFontSection) { SGFontBuiltIn, SGFontMore, SGFontYou
 
 - (instancetype)init {
     if (!(self = [super initWithStyle:UITableViewStyleInsetGrouped])) return nil;
-    self.title = @"Font";
+    self.title = SGLocalized(@"Font");
     _families = SGAppFontFamilies();
     SGRegisterCustomFont();   // so the imported family can be drawn here, whichever font is chosen
     return self;
@@ -303,7 +303,7 @@ typedef NS_ENUM(NSInteger, SGFontSection) { SGFontBuiltIn, SGFontMore, SGFontYou
         selected = chosen == SGAppFontCustom;
         subtitle = [NSString stringWithFormat:@"%lu style%@", (unsigned long)self.styleCount, self.styleCount == 1 ? @"" : @"s"];
     } else {
-        SGFillCell(cell, @"Add a font file", nil, SGGreen(), nil);
+        SGFillCell(cell, SGLocalized(@"Add a font file"), nil, SGGreen(), nil);
         cell.selectionStyle = UITableViewCellSelectionStyleDefault;
         cell.accessibilityTraits = UIAccessibilityTraitButton;
         return cell;
@@ -355,7 +355,7 @@ typedef NS_ENUM(NSInteger, SGFontSection) { SGFontBuiltIn, SGFontMore, SGFontYou
 @end
 
 NSArray<SGModRow *> *SGAppFontRows(void) {
-    SGModRow *font = SGPageRow(@"Font", ^UIViewController *{ return [SGFontPage new]; });
+    SGModRow *font = SGPageRow(SGLocalized(@"Font"), ^UIViewController *{ return [SGFontPage new]; });
     font.value = ^NSString *{ return chosenLabel(); };
     return @[font];
 }

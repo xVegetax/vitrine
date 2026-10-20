@@ -178,10 +178,10 @@ static NSString *signedNumber(double value, int decimals) {
         config.imagePadding = 5;
         _presets.configuration = config;
         _presets.showsMenuAsPrimaryAction = YES;
-        _presets.accessibilityLabel = @"Preset";
+        _presets.accessibilityLabel = SGLocalized(@"Preset");
     } else {
         _name = [UILabel new];
-        _name.text = @"Amount";
+        _name.text = SGLocalized(@"Amount");
         _name.textColor = UIColor.whiteColor;
         _name.accessibilityTraits = UIAccessibilityTraitHeader;
         [self addSubview:_name];

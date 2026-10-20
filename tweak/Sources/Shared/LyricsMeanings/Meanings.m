@@ -19,7 +19,7 @@ SGLyricsMeaningsLevel SGLyricsMeaningsShown(void) {
 }
 
 SGModRow *SGLyricsMeaningsRow(void) {
-    SGModRow *row = SGChoiceRow(@"Line meanings", nil, SGKeyLyricsMeanings,
+    SGModRow *row = SGChoiceRow(SGLocalized(@"Line meanings"), nil, SGKeyLyricsMeanings,
                                 @[@"Off", @"From the artist", @"Artist and editors", @"Everyone"], SGLyricsMeaningsOff);
     row.choiceFooter = @"Explanations from Genius. Tap the bubble after a line, or hold the line.";
     return row;

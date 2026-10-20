@@ -14,7 +14,7 @@
 
 - (instancetype)init {
     if (!(self = [super initWithStyle:UITableViewStyleInsetGrouped])) return nil;
-    self.title = @"Text sizes";
+    self.title = SGLocalized(@"Text sizes");
     return self;
 }
 
@@ -22,7 +22,7 @@
     [super viewDidLoad];
     _order = [SGRLyricsTextOrder() mutableCopy];
     self.tableView.editing = YES;
-    _footer = SGNote(@"Pronunciation and translation are turned on from the button in the lyrics' corner.");
+    _footer = SGNote(SGLocalized(@"Pronunciation and translation are turned on from the button in the lyrics' corner."));
     self.tableView.tableFooterView = _footer;
 }
 
@@ -89,5 +89,5 @@
 @end
 
 SGModRow *SGRLyricsTextSizesRow(void) {
-    return SGPageRow(@"Text sizes", ^UIViewController *{ return [SGRLyricsTextPage new]; });
+    return SGPageRow(SGLocalized(@"Text sizes"), ^UIViewController *{ return [SGRLyricsTextPage new]; });
 }

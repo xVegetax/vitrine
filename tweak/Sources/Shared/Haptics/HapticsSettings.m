@@ -101,7 +101,7 @@ SGMusicFollows SGMusicHapticsFollows(void) {
 static SGModRow *strengthRow(NSString *key, void (^changed)(void)) {
     NSInteger minimum, maximum;
     strengthRange(key, &minimum, &maximum);
-    return SGSliderRow(@"Strength", nil, minimum, maximum, SGStrengthStep,
+    return SGSliderRow(SGLocalized(@"Strength"), nil, minimum, maximum, SGStrengthStep,
         ^double { return SGHapticsStrength(key) * 100; },
         ^(double value) {
             SGSetInt(key, lround(value));
@@ -115,7 +115,7 @@ static SGModRow *strengthRow(NSString *key, void (^changed)(void)) {
 static NSArray<SGModSection *> *sections(SGVibrationsPreview *preview, void (^explain)(void)) {
     SGMigrateMusicHaptics();
     __weak SGVibrationsPreview *weakPreview = preview;
-    SGModRow *controls = SGSwitchRow(@"Controls", nil, SGKeyControlHaptics);
+    SGModRow *controls = SGSwitchRow(SGLocalized(@"Controls"), nil, SGKeyControlHaptics);
     controls.changed = ^(BOOL on) { [weakPreview reload]; };
     SGModRow *controlStrength = strengthRow(SGKeyControlStrength, ^{
         // Felt as it is set, and seen: a tap at the new strength with each step, and its ripple.
@@ -128,7 +128,7 @@ static NSArray<SGModSection *> *sections(SGVibrationsPreview *preview, void (^ex
         [NSNotificationCenter.defaultCenter postNotificationName:SGMusicHapticsSwitchesChangedNotification object:nil];
         [weakPreview reload];
     };
-    SGModRow *music = SGOptionRow(@"Music Haptics", nil, SGKeyMusicHaptics);
+    SGModRow *music = SGOptionRow(SGLocalized(@"Music Haptics"), nil, SGKeyMusicHaptics);
     music.info = kMusicInfo;
     music.changed = switched;
     SGModRow *musicStrength = strengthRow(SGKeyMusicStrength, ^{
@@ -138,12 +138,12 @@ static NSArray<SGModSection *> *sections(SGVibrationsPreview *preview, void (^ex
         [weakPreview rippleAt:SGHapticsStrength(SGKeyMusicStrength) / 2];
     });
     musicStrength.waitsOn = SGKeyMusicHaptics;
-    SGModRow *follows = SGChoiceRow(@"Follows", nil, SGKeyMusicFollows, followsNames(), SGMusicFollowsEverything);
+    SGModRow *follows = SGChoiceRow(SGLocalized(@"Follows"), nil, SGKeyMusicFollows, followsNames(), SGMusicFollowsEverything);
     follows.choiceNotes = followsNotes();
     follows.chosen = ^(NSInteger index) { SGMusicHapticsSettingsChanged(); };
     follows.waitsOn = SGKeyMusicHaptics;
 
-    SGModRow *background = SGOptionRow(@"In the Background", nil, SGKeyMusicHapticsBackground);
+    SGModRow *background = SGOptionRow(SGLocalized(@"In the Background"), nil, SGKeyMusicHapticsBackground);
     background.info = kBackgroundInfo;
     background.changed = switched;
     background.visible = ^BOOL { return backgroundAvailable(); };
@@ -160,7 +160,7 @@ static NSArray<SGModSection *> *sections(SGVibrationsPreview *preview, void (^ex
         [SGTopController() presentViewController:alert animated:YES completion:nil];
     });
     unlisted.visible = ^BOOL { return backgroundAvailable() && !SGMusicHapticsListedByInstall(); };
-    SGModRow *systemOff = SGActionRow(@"Music Haptics is off in iOS", @"Tap to turn it on in Settings", explain);
+    SGModRow *systemOff = SGActionRow(SGLocalized(@"Music Haptics is off in iOS"), SGLocalized(@"Tap to turn it on in Settings"), explain);
     systemOff.visible = ^BOOL { return SGMusicHapticsInBackground() && !SGSystemMusicHapticsOn(); };
 
     return @[

@@ -41,18 +41,18 @@ NSString *SGRedesignUntestedWarning(void) {
 // The whole look changes hands at launch, so the switch asks for the restart straight away rather than
 // leaving Spotify half in the old look.
 static void offerRestart(BOOL on) {
-    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Restart Spotify"
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:SGLocalized(@"Restart Spotify")
         message:on ? @"The redesign takes over when Spotify starts again. Spotify closes now; open it again to see it." : @"Spotify's own look comes back when Spotify starts again. Spotify closes now; open it again to see it."
         preferredStyle:UIAlertControllerStyleAlert];
-    [alert addAction:[UIAlertAction actionWithTitle:@"Later" style:UIAlertActionStyleCancel handler:nil]];
-    [alert addAction:[UIAlertAction actionWithTitle:@"Restart now" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) { SGRestartSpotify(); }]];
+    [alert addAction:[UIAlertAction actionWithTitle:SGLocalized(@"Later") style:UIAlertActionStyleCancel handler:nil]];
+    [alert addAction:[UIAlertAction actionWithTitle:SGLocalized(@"Restart now") style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) { SGRestartSpotify(); }]];
     [SGTopController() presentViewController:alert animated:YES completion:nil];
 }
 
 // Below iOS 26 the switch stores the warning's key, not the look's: it is on only once the warning has
 // been accepted, which restarts Spotify at once, so the switch never reads on for a look that is not coming.
 static SGModRow *untestedRow(void) {
-    SGModRow *row = SGOptionRow(@"Redesigned UI", [NSString stringWithFormat:@"Untested on iOS %@", UIDevice.currentDevice.systemVersion], SGKeyRedesignUntested);
+    SGModRow *row = SGOptionRow(SGLocalized(@"Redesigned UI"), [NSString stringWithFormat:@"Untested on iOS %@", UIDevice.currentDevice.systemVersion], SGKeyRedesignUntested);
     row.glows = YES;
     row.info = SGRedesignedUIInfo;
     row.changed = ^(BOOL on) {
@@ -62,11 +62,11 @@ static SGModRow *untestedRow(void) {
             return;
         }
         SGSetEnabled(SGKeyRedesignUntested, NO);   // the page reloads to off; the warning's button turns it on
-        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Turn on the redesign?"
+        UIAlertController *alert = [UIAlertController alertControllerWithTitle:SGLocalized(@"Turn on the redesign?")
             message:[SGRedesignUntestedWarning() stringByAppendingString:@"\n\nSpotify restarts to turn it on."]
             preferredStyle:UIAlertControllerStyleAlert];
-        [alert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
-        [alert addAction:[UIAlertAction actionWithTitle:@"Turn On and Restart" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+        [alert addAction:[UIAlertAction actionWithTitle:SGLocalized(@"Cancel") style:UIAlertActionStyleCancel handler:nil]];
+        [alert addAction:[UIAlertAction actionWithTitle:SGLocalized(@"Turn On and Restart") style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
             SGSetRedesignedUI(YES);
             SGRestartSpotify();
         }]];
@@ -77,7 +77,7 @@ static SGModRow *untestedRow(void) {
 
 SGModRow *SGRedesignedUIRow(void) {
     if (!SGRedesignAvailable()) return untestedRow();
-    SGModRow *redesign = SGOptionRow(@"Redesigned UI", nil, SGKeyRedesign);
+    SGModRow *redesign = SGOptionRow(SGLocalized(@"Redesigned UI"), nil, SGKeyRedesign);
     redesign.glows = YES;
     redesign.info = SGRedesignedUIInfo;
     redesign.changed = ^(BOOL on) {
@@ -93,7 +93,7 @@ UIViewController *SGAppearancePage(void) {
     NSMutableArray<SGModRow *> *everywhere = [NSMutableArray arrayWithArray:SGAppFontRows()];
     SGModRow *icon = SGAppIconRow();
     if (icon) [everywhere addObject:icon];
-    return [[SGModPage alloc] initWithTitle:@"Appearance" intro:SGRestartNote sections:@[
+    return [[SGModPage alloc] initWithTitle:SGLocalized(@"Appearance") intro:SGRestartNote sections:@[
         SGSection(nil, SGRedesignedUIStored() ? SGRAppearanceRows() : SGNativeAppearanceRows()),
         SGSection(nil, everywhere),
     ] footer:nil];
@@ -108,7 +108,7 @@ static UIViewController *lyricsPage(void) {
     BOOL redesigned = SGRedesignedUIStored();
     NSMutableArray<SGModRow *> *more = [NSMutableArray arrayWithObject:SGLockScreenLyricsRow()];
     if (!redesigned) [more insertObject:SGGlassLyricsRow() atIndex:0];
-    SGModRow *sing = SGPageRow(@"Karaoke", ^UIViewController *{ return SGSingSettingsPage(); });
+    SGModRow *sing = SGPageRow(SGLocalized(@"Karaoke"), ^UIViewController *{ return SGSingSettingsPage(); });
     sing.value = ^NSString *{ return SGSingSummary(); };
     NSMutableArray<SGModSection *> *sections = [NSMutableArray arrayWithObjects:SGSection(nil, @[SGWithTile(sing, @"music.mic", UIColor.systemRedColor)]),
                                                 SGLyricsSourcesSection(redesigned), nil];
@@ -117,8 +117,8 @@ static UIViewController *lyricsPage(void) {
     if (redesigned) {
         [sections addObjectsFromArray:@[
             SGSection(@"Display", @[SGRLyricsTextSizesRow(), SGLyricsWordTimingRow(), SGLyricsRomanisedRow(),
-                SGSwitchRow(@"Hide the controls", @"A few seconds after the last touch, the lyrics take the whole player", SGRKeyLyricsAutoHide),
-                SGSwitchRow(@"Landscape lyrics", @"Turn the phone with the lyrics open", SGRKeyLyricsLandscape)]),
+                SGSwitchRow(SGLocalized(@"Hide the controls"), SGLocalized(@"A few seconds after the last touch, the lyrics take the whole player"), SGRKeyLyricsAutoHide),
+                SGSwitchRow(SGLocalized(@"Landscape lyrics"), SGLocalized(@"Turn the phone with the lyrics open"), SGRKeyLyricsLandscape)]),
             timing,
             SGSection(@"Translation", @[SGLyricsTranslationLanguageRow(), SGTranslateEverySongRow(), SGGeminiKeyRow(), SGSavedTranslationsRow()]),
             SGSection(nil, @[SGLyricsMeaningsRow()]),
@@ -129,7 +129,7 @@ static UIViewController *lyricsPage(void) {
     [sections addObject:SGSection(nil, more)];
     // The redesign's page leads with its lyrics playing in the look the page sets, and that look's presets.
     if (redesigned) return SGRLyricsSettingsPage(@"Lyrics", @"The look applies at once. The settings below apply after you restart Spotify.", sections);
-    return [[SGModPage alloc] initWithTitle:@"Lyrics" intro:SGRestartNote sections:sections footer:nil];
+    return [[SGModPage alloc] initWithTitle:SGLocalized(@"Lyrics") intro:SGRestartNote sections:sections footer:nil];
 }
 
 // Lyrics has its own row on Mod Settings' main page, beside Sing.
@@ -138,7 +138,7 @@ UIViewController *SGLyricsSettingsPage(void) {
 }
 
 UIViewController *SGPlayerSettingsPage(void) {
-    SGModRow *blocked = SGPageRow(@"Blocked artists", ^UIViewController *{ return SGArtistBlockSettingsPage(); });
+    SGModRow *blocked = SGPageRow(SGLocalized(@"Blocked artists"), ^UIViewController *{ return SGArtistBlockSettingsPage(); });
     blocked.value = ^NSString *{
         return SGFlag(SGKeyArtistBlock, NO) ? @(SGBlockedArtists().count).stringValue : @"Off";
     };
@@ -146,23 +146,23 @@ UIViewController *SGPlayerSettingsPage(void) {
 
     // AirPods gestures, the lock screen widget and Vibrations have rows of their own on Mod Settings' main page.
     NSMutableArray<SGModSection *> *sections = [NSMutableArray arrayWithObject:SGSection(nil, @[
-        SGWithTile(SGPageRow(@"Gestures", ^UIViewController *{ return SGGesturesSettingsPage(); }), @"hand.tap", UIColor.systemBlueColor),
+        SGWithTile(SGPageRow(SGLocalized(@"Gestures"), ^UIViewController *{ return SGGesturesSettingsPage(); }), @"hand.tap", UIColor.systemBlueColor),
         SGWithTile(blocked, @"person.crop.circle.badge.xmark", UIColor.systemRedColor),
     ])];
     if (native) {
         [sections addObject:SGSection(nil, @[
-            SGWithTile(SGPageRow(@"Now playing bar", ^UIViewController *{ return SGNowPlayingBarSettingsPage(); }), @"rectangle.bottomthird.inset.filled", UIColor.systemPinkColor),
-            SGWithTile(SGPageRow(@"Queue & devices", ^UIViewController *{ return SGQueueSettingsPage(); }), @"text.line.first.and.arrowtriangle.forward", UIColor.systemIndigoColor),
+            SGWithTile(SGPageRow(SGLocalized(@"Now playing bar"), ^UIViewController *{ return SGNowPlayingBarSettingsPage(); }), @"rectangle.bottomthird.inset.filled", UIColor.systemPinkColor),
+            SGWithTile(SGPageRow(SGLocalized(@"Queue & devices"), ^UIViewController *{ return SGQueueSettingsPage(); }), @"text.line.first.and.arrowtriangle.forward", UIColor.systemIndigoColor),
         ])];
         [sections addObjectsFromArray:SGNativePlayerScreenSections()];
     }
     // Switch to video is the same chip of Spotify's player under either look.
     [sections addObject:SGSection(native ? nil : @"Hide on the player", @[
-        SGHideRow(@"Switch to video", @"The chip over the title of a song with a music video", SGKeyHideVideoSwitch),
+        SGHideRow(SGLocalized(@"Switch to video"), @"The chip over the title of a song with a music video", SGKeyHideVideoSwitch),
     ])];
 
     [sections addObject:SGNotedSection(@"Lossless", @[
-        SGOptionRow(@"Lossless files", @"Your own FLACs in place of Spotify's stream", SGKeyLossless),
+        SGOptionRow(SGLocalized(@"Lossless files"), SGLocalized(@"Your own FLACs in place of Spotify's stream"), SGKeyLossless),
     ], @"Put FLAC or ALAC files in Files › Spotify › Lossless. A file plays when its title and length match the song "
        @"and its sound matches what Spotify plays, from about 4 s after the song starts or you seek. Spotify still "
        @"streams its own copy, at its lowest quality while the next song has a file. Karaoke and speeds other than "
@@ -171,5 +171,5 @@ UIViewController *SGPlayerSettingsPage(void) {
     // The redesign's page leads with a card of its player and the background's control, the background's
     // rows and the Mini player section under it.
     if (!native) return SGRPlayerSettingsPage(sections);
-    return [[SGModPage alloc] initWithTitle:@"Player" intro:SGRestartNote sections:sections footer:nil];
+    return [[SGModPage alloc] initWithTitle:SGLocalized(@"Player") intro:SGRestartNote sections:sections footer:nil];
 }

@@ -70,7 +70,7 @@ static void appendTab(NSDictionary *tab) {
 
 - (instancetype)init {
     if (!(self = [super initWithStyle:UITableViewStyleInsetGrouped])) return nil;
-    self.title = @"Split Tabs";
+    self.title = SGLocalized(@"Split Tabs");
     return self;
 }
 
@@ -157,7 +157,7 @@ typedef NS_ENUM(NSInteger, SGNavbarSection) {
 
 - (instancetype)init {
     if (!(self = [super initWithStyle:UITableViewStyleInsetGrouped])) return nil;
-    self.title = @"Tab bar";
+    self.title = SGLocalized(@"Tab bar");
     return self;
 }
 
@@ -244,7 +244,7 @@ typedef NS_ENUM(NSInteger, SGNavbarSection) {
             cell.selectionStyle = UITableViewCellSelectionStyleDefault;
             break;
         case SGNavbarSectionSplit:
-            SGFillCell(cell, @"Split tabs", @"Place chosen tabs apart on the right", nil, @"rectangle.split.2x1");
+            SGFillCell(cell, SGLocalized(@"Split tabs"), @"Place chosen tabs apart on the right", nil, @"rectangle.split.2x1");
             cell.accessoryView = SGSymbolView(@"chevron.right", 13, UIImageSymbolWeightSemibold, 16);
             cell.selectionStyle = UITableViewCellSelectionStyleDefault;
             break;
@@ -317,8 +317,8 @@ typedef NS_ENUM(NSInteger, SGNavbarSection) {
     UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Use Spotify's order"
                                                                   message:@"Every tab of Spotify's comes back where Spotify put it, the tabs you added go, and no tab is split apart."
                                                            preferredStyle:UIAlertControllerStyleAlert];
-    [alert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
-    [alert addAction:[UIAlertAction actionWithTitle:@"Reset" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
+    [alert addAction:[UIAlertAction actionWithTitle:SGLocalized(@"Cancel") style:UIAlertActionStyleCancel handler:nil]];
+    [alert addAction:[UIAlertAction actionWithTitle:SGLocalized(@"Reset") style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
         SGSetNavbarLayout(@[]);
         SGSetNavbarSplit(@[]);
         SGRefreshTabBar();

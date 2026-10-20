@@ -440,7 +440,7 @@ static CGFloat height(float rms) {
 - (void)explainState {
     NSString *detail = SGSingStatusDetail();
     if (!detail) return;
-    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Karaoke" message:detail preferredStyle:UIAlertControllerStyleAlert];
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:SGLocalized(@"Karaoke") message:detail preferredStyle:UIAlertControllerStyleAlert];
     if (SGSingCurrentState() == SGSingStateFailed) {
         [alert addAction:[UIAlertAction actionWithTitle:@"Try again" style:UIAlertActionStyleDefault handler:^(UIAlertAction *a) {
             SGSetSingOn(NO);

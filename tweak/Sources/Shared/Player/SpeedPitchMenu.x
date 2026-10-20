@@ -236,10 +236,10 @@ static void placeTick(UISlider *slider) {
     _pitch = [self slider:-kMaxPitch max:kMaxPitch normal:0 minImage:@"arrow.down" maxImage:@"arrow.up"];
     _pitch.accessibilityLabel = @"Pitch";
     _reverbName = makeLabel(nameFont, secondary());
-    _reverbName.text = @"Reverb";
+    _reverbName.text = SGLocalized(@"Reverb");
     _reverbValue = [self valueButton:@selector(resetReverb)];
     _reverb = [self slider:0 max:100 normal:0 minImage:@"speaker" maxImage:@"building.columns"];
-    _reverb.accessibilityLabel = @"Reverb";
+    _reverb.accessibilityLabel = SGLocalized(@"Reverb");
     _followsName = makeLabel(nameFont, primary());
     _followsName.text = @"Pitch follows speed";
     _follows = [UISwitch new];

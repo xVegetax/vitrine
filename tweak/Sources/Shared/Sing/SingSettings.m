@@ -28,7 +28,7 @@ static void tell(NSString *title, NSString *message) {
 
 static void ask(NSString *title, NSString *message, NSString *action, BOOL destructive, void (^then)(void)) {
     UIAlertController *alert = [UIAlertController alertControllerWithTitle:title message:message preferredStyle:UIAlertControllerStyleAlert];
-    [alert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+    [alert addAction:[UIAlertAction actionWithTitle:SGLocalized(@"Cancel") style:UIAlertActionStyleCancel handler:nil]];
     [alert addAction:[UIAlertAction actionWithTitle:action style:destructive ? UIAlertActionStyleDestructive : UIAlertActionStyleDefault
                                             handler:^(UIAlertAction *a) { then(); }]];
     [SGTopController() presentViewController:alert animated:YES completion:nil];
@@ -141,13 +141,13 @@ static void modelTapped(UITableViewController *page) {
 @end
 
 UIViewController *SGSpatialVoiceSettingsPage(void) {
-    SGModRow *spatial = SGOptionRow(@"Spatial voice", nil, SGKeySingSpatial);
+    SGModRow *spatial = SGOptionRow(SGLocalized(@"Spatial voice"), nil, SGKeySingSpatial);
     __block __weak SGSpatialVoicePage *page;
     spatial.changed = ^(BOOL on) {
         SGSetSingSpatial(on);
         [page.preview refresh];
     };
-    SGSpatialVoicePage *made = [[SGSpatialVoicePage alloc] initWithTitle:@"Spatial voice" intro:nil sections:@[
+    SGSpatialVoicePage *made = [[SGSpatialVoicePage alloc] initWithTitle:SGLocalized(@"Spatial voice") intro:nil sections:@[
         SGNotedSection(nil, @[spatial],
                        @"The singer's voice keeps its place in front of you as you turn your head, while the rest of the song turns with "
                        @"you; stay turned, and it comes round in front again. It follows your head through headphones that "
@@ -157,13 +157,13 @@ UIViewController *SGSpatialVoiceSettingsPage(void) {
             SGSliderRow(@"Distance", nil, 1, 6.5, 0.5, ^double { return SGSingSpatialDistance(); }, ^(double value) {
                 SGSetSingSpatialSound(value, SGSingSpatialRoom(), SGSingSpatialFront(), SGSingSpatialWidth());
             }, ^NSString *(double value) { return [NSString stringWithFormat:@"%.1f m", value]; }),
-            SGSliderRow(@"Room", nil, 0, 100, 5, ^double { return SGSingSpatialRoom(); }, ^(double value) {
+            SGSliderRow(SGLocalized(@"Room"), nil, 0, 100, 5, ^double { return SGSingSpatialRoom(); }, ^(double value) {
                 SGSetSingSpatialSound(SGSingSpatialDistance(), value, SGSingSpatialFront(), SGSingSpatialWidth());
             }, ^NSString *(double value) { return [NSString stringWithFormat:@"%.0f%%", value]; }),
-            SGSliderRow(@"Back in front", nil, 5, 60, 1, ^double { return SGSingSpatialFront(); }, ^(double value) {
+            SGSliderRow(SGLocalized(@"Back in front"), nil, 5, 60, 1, ^double { return SGSingSpatialFront(); }, ^(double value) {
                 SGSetSingSpatialSound(SGSingSpatialDistance(), SGSingSpatialRoom(), value, SGSingSpatialWidth());
             }, ^NSString *(double value) { return [NSString stringWithFormat:@"After %.0f s", value]; }),
-            SGSliderRow(@"Instruments width", nil, 0, 200, 5, ^double { return SGSingSpatialWidth(); }, ^(double value) {
+            SGSliderRow(SGLocalized(@"Instruments width"), nil, 0, 200, 5, ^double { return SGSingSpatialWidth(); }, ^(double value) {
                 SGSetSingSpatialSound(SGSingSpatialDistance(), SGSingSpatialRoom(), SGSingSpatialFront(), value);
             }, ^NSString *(double value) { return [NSString stringWithFormat:@"%.0f%%", value]; }),
         ], @"How far ahead the voice sings, and how much of the room you hear around it: farther, the voice is quieter and "
@@ -203,19 +203,19 @@ UIViewController *SGSpatialVoiceSettingsPage(void) {
 NSNotificationName const SGSingButtonDidChangeNotification = @"SGSingButtonDidChangeNotification";
 
 UIViewController *SGSingSettingsPage(void) {
-    SGModRow *sing = SGOptionRow(@"Karaoke", nil, SGKeySing);
+    SGModRow *sing = SGOptionRow(SGLocalized(@"Karaoke"), nil, SGKeySing);
     sing.changed = ^(BOOL on) { SGSetSingOn(on); };
     // Only the redesign's lyrics have the mic.
-    SGModRow *button = SGSwitchRow(@"Toggle from lyrics", @"The mic in the corner of the lyrics", SGKeySingButton);
+    SGModRow *button = SGSwitchRow(SGLocalized(@"Toggle from lyrics"), SGLocalized(@"The mic in the corner of the lyrics"), SGKeySingButton);
     button.changed = ^(BOOL on) { [NSNotificationCenter.defaultCenter postNotificationName:SGSingButtonDidChangeNotification object:nil]; };
     button.visible = ^BOOL { return SGRedesignedUIStored(); };
-    SGModRow *heat = SGOptionRow(@"Ignore heat warnings", @"Keeps Karaoke going on a hot iPhone, which then gets hotter", SGKeySingIgnoreHeat);
-    SGModRow *memory = SGOptionRow(@"Ignore memory warnings", @"Keeps Karaoke going when iOS is low on memory, which may then close Spotify",
+    SGModRow *heat = SGOptionRow(SGLocalized(@"Ignore heat warnings"), SGLocalized(@"Keeps Karaoke going on a hot iPhone, which then gets hotter"), SGKeySingIgnoreHeat);
+    SGModRow *memory = SGOptionRow(SGLocalized(@"Ignore memory warnings"), SGLocalized(@"Keeps Karaoke going when iOS is low on memory, which may then close Spotify"),
                                    SGKeySingIgnoreMemory);
     heat.changed = ^(BOOL on) { SGSetSingIgnoresHeat(on); };
     __block __weak SGModPage *page;
-    SGModRow *model = SGStatActionRow(@"Voice model", nil, ^NSString *{ return modelValue(); }, ^{ modelTapped(page); });
-    SGModRow *remove = SGActionRow(@"Remove voice model", nil, ^{
+    SGModRow *model = SGStatActionRow(SGLocalized(@"Voice model"), nil, ^NSString *{ return modelValue(); }, ^{ modelTapped(page); });
+    SGModRow *remove = SGActionRow(SGLocalized(@"Remove voice model"), nil, ^{
         BOOL partial = SGSingModelCurrentState() != SGSingModelReady;
         ask(partial ? @"Remove the paused download?" : @"Remove the voice model?",
             partial ? [NSString stringWithFormat:@"It frees %@. A new download starts from the beginning.", bytes(SGSingModelPausedBytes())]
@@ -247,7 +247,7 @@ UIViewController *SGSingSettingsPage(void) {
     SGModRow *full = choice(@"Best quality", @"The full model, %@: the cleanest result, for recent iPhones", SGSingModelFull);
     SGModRow *light = choice(@"Light", @"A small model, %@, for older iPhones: more of the voice is left in, and the music dips under it",
                              SGSingModelLight);
-    SGModRow *other = SGStatActionRow(@"Remove the other model", nil, ^NSString *{ return bytes(SGSingOtherModelBytes()); }, ^{
+    SGModRow *other = SGStatActionRow(SGLocalized(@"Remove the other model"), nil, ^NSString *{ return bytes(SGSingOtherModelBytes()); }, ^{
         NSString *name = SGSingChosenModel() == SGSingModelFull ? @"Light" : @"Best quality";
         ask(@"Remove the other model?", [NSString stringWithFormat:@"%@ is not in use. Removing it frees %@, and choosing it again downloads it again.",
                                          name, bytes(SGSingOtherModelBytes())],
@@ -258,12 +258,12 @@ UIViewController *SGSingSettingsPage(void) {
     });
     other.color = SGRed();
     other.visible = ^BOOL { return SGSingOtherModelBytes() > 0; };
-    SGModRow *spatial = SGPageRow(@"Spatial voice", ^UIViewController *{ return SGSpatialVoiceSettingsPage(); });
+    SGModRow *spatial = SGPageRow(SGLocalized(@"Spatial voice"), ^UIViewController *{ return SGSpatialVoiceSettingsPage(); });
     spatial.subtitle = @"With AirPods, the voice stays in front of you as you turn your head";
     spatial.value = ^NSString *{ return SGSingSpatial() ? @"On" : @"Off"; };
     // Facts about the iPhone, which do not change while the page shows.
     spatial.visible = ^BOOL { return SGSingSpatialAvailable(); };
-    SGModRow *units = SGChoiceRow(@"Runs on", nil, SGKeySingComputeUnits, SGSingComputeUnitNames(), 0);
+    SGModRow *units = SGChoiceRow(SGLocalized(@"Runs on"), nil, SGKeySingComputeUnits, SGSingComputeUnitNames(), 0);
     units.choiceNotes = @[@"The Neural Engine, the fastest, with the CPU while it loads", @"Slower and warmer, and a little less memory"];
     units.choiceFooter = @"Karaoke loads the voice model on the CPU first and starts with it. On Automatic a second copy then loads on "
                          @"the Neural Engine and takes over, in the background too. The iPhone prepares it the first time after Vitrine "
@@ -271,9 +271,9 @@ UIViewController *SGSingSettingsPage(void) {
                          @"updates did it already. If it does not load, "
                          @"Karaoke stays on the CPU until Spotify is opened again.";
     units.chosen = ^(NSInteger index) { SGSingComputeUnitsChanged(); };
-    SGModRow *prepare = SGSwitchRow(@"Prepare after updates",
-                                    @"Readies the Neural Engine in the background after Vitrine or iOS updates, so Karaoke starts at full speed", SGKeySingPrepareAhead);
-    SGSingPage *made = [[SGSingPage alloc] initWithTitle:@"Karaoke" intro:nil sections:@[
+    SGModRow *prepare = SGSwitchRow(SGLocalized(@"Prepare after updates"),
+                                    SGLocalized(@"Readies the Neural Engine in the background after Vitrine or iOS updates, so Karaoke starts at full speed"), SGKeySingPrepareAhead);
+    SGSingPage *made = [[SGSingPage alloc] initWithTitle:SGLocalized(@"Karaoke") intro:nil sections:@[
         SGSection(nil, @[sing, button, heat, memory]),
         SGNotedSection(@"Voice model", @[full, light, model, remove, other],
                        @"Each model is downloaded and kept on its own, and Karaoke needs only the chosen one. A switch takes effect "

@@ -27,7 +27,7 @@ static NSString *flagState(const SGFlagDef *flag, id value) {
 
 - (instancetype)init {
     if (!(self = [super initWithStyle:UITableViewStylePlain])) return nil;
-    self.title = @"Flags";
+    self.title = SGLocalized(@"Flags");
     return self;
 }
 
@@ -40,7 +40,7 @@ static NSString *flagState(const SGFlagDef *flag, id value) {
     _search.placeholder = [NSString stringWithFormat:@"Search %lu flags", (unsigned long)SGFlagCount];
     _search.searchBarStyle = UISearchBarStyleMinimal;
     _search.delegate = self;
-    _header = SGNote(@"Auto keeps Spotify's value. Changes apply after you restart Spotify.");
+    _header = SGNote(SGLocalized(@"Auto keeps Spotify's value. Changes apply after you restart Spotify."));
     [_header addSubview:_search];
     self.tableView.tableHeaderView = _header;
     [self reload];
@@ -148,11 +148,11 @@ static NSString *flagState(const SGFlagDef *flag, id value) {
         field.text = value ? [value description] : @"";
         field.keyboardType = flag->type == SGFlagInt ? UIKeyboardTypeNumbersAndPunctuation : UIKeyboardTypeDefault;
     }];
-    [alert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+    [alert addAction:[UIAlertAction actionWithTitle:SGLocalized(@"Cancel") style:UIAlertActionStyleCancel handler:nil]];
     [alert addAction:[UIAlertAction actionWithTitle:@"Auto" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *a) {
         [self store:nil forKey:key row:path.row];
     }]];
-    [alert addAction:[UIAlertAction actionWithTitle:@"Force" style:UIAlertActionStyleDefault handler:^(UIAlertAction *a) {
+    [alert addAction:[UIAlertAction actionWithTitle:SGLocalized(@"Force") style:UIAlertActionStyleDefault handler:^(UIAlertAction *a) {
         NSString *text = alert.textFields.firstObject.text;
         if (!text.length) return;
         [self store:flag->type == SGFlagInt ? @(text.integerValue) : text forKey:key row:path.row];

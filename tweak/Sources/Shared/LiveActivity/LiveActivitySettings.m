@@ -72,7 +72,7 @@ BOOL SGLiveActivityAllowedByInstall(void) {
 // At the top while the install lacks the key, saying why nothing shows and what to do.
 static SGModRow *missingRow(void) {
     SGModRow *row = SGWarningRow(@"Missing from this install", @"Tap for why", ^{
-        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Live Activity is missing"
+        UIAlertController *alert = [UIAlertController alertControllerWithTitle:SGLocalized(@"Live Activity is missing")
             message:@"iOS shows a Live Activity only for an app that says it has one, and only Vitrine's IPA build writes that into Spotify. This Spotify was put together another way, such as with Vitrine's .deb injected by hand, so iOS turns the card down. Build the IPA with Vitrine to get it."
             preferredStyle:UIAlertControllerStyleAlert];
         alert.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;
@@ -88,28 +88,28 @@ UIViewController *SGLiveActivitySettingsPage(void) {
     __weak SGLiveActivityPreview *weakPreview = preview;
     void (^switched)(BOOL) = ^(BOOL on) { [weakPreview reload]; };
 
-    SGModRow *on = SGOptionRow(@"Live Activity", nil, SGKeyLiveActivity);
+    SGModRow *on = SGOptionRow(SGLocalized(@"Live Activity"), nil, SGKeyLiveActivity);
     on.changed = ^(BOOL value) { SGSetLiveActivityEnabled(value); };
-    SGModRow *view = SGChoiceRow(@"Shows", nil, SGKeyLiveActivityView, viewNames(), SGLiveActivityLyrics);
+    SGModRow *view = SGChoiceRow(SGLocalized(@"Shows"), nil, SGKeyLiveActivityView, viewNames(), SGLiveActivityLyrics);
     // The lyrics view's own rows, shown while it is picked.
     SGModRow *without = menuRow(@"Without lyrics", SGKeyLiveActivityWithoutLyrics, @[@"Note", @"Track"], SGLiveActivityWithoutLyricsNote, preview);
     SGModRow *alignment = menuRow(@"Alignment", SGKeyLiveActivityAlignment, @[@"Left", @"Center"], SGLiveActivityAlignCenter, preview);
-    SGModRow *translation = SGOptionRow(@"Translations", @"Under the line, when the lyrics have one", SGKeyLiveActivityTranslation);
+    SGModRow *translation = SGOptionRow(SGLocalized(@"Translations"), SGLocalized(@"Under the line, when the lyrics have one"), SGKeyLiveActivityTranslation);
     translation.changed = switched;
-    SGModRow *size = SGChoiceRow(@"Text size", nil, SGKeyLiveActivityTextSize, @[@"Small", @"Medium", @"Large"], SGLiveActivityTextMedium);
+    SGModRow *size = SGChoiceRow(SGLocalized(@"Text size"), nil, SGKeyLiveActivityTextSize, @[@"Small", @"Medium", @"Large"], SGLiveActivityTextMedium);
     for (SGModRow *row in @[without, alignment, translation, size]) row.visible = ^BOOL { return SGInt(SGKeyLiveActivityView, SGLiveActivityLyrics) == SGLiveActivityLyrics; };
     // Every view's.
-    SGModRow *artwork = SGSwitchRow(@"Artwork", @"The cover beside the track's name and in the Dynamic Island", SGKeyLiveActivityArtwork);
+    SGModRow *artwork = SGSwitchRow(SGLocalized(@"Artwork"), SGLocalized(@"The cover beside the track's name and in the Dynamic Island"), SGKeyLiveActivityArtwork);
     artwork.changed = switched;
     SGModRow *colors = menuRow(@"Colors", SGKeyLiveActivityColors, @[@"Spotify", @"Artwork", @"Plain"], SGLiveActivityColorsSpotify, preview);
-    SGModRow *progress = SGSwitchRow(@"Progress bar", nil, SGKeyLiveActivityProgressBar);
+    SGModRow *progress = SGSwitchRow(SGLocalized(@"Progress bar"), nil, SGKeyLiveActivityProgressBar);
     progress.changed = switched;
     // The sleep timer's own: the card's Timer tab, the Sleep Timer shortcut and its control all fade by it, card on or
     // off, and so does Spotify's own timer from the player's menu (Shared/Player/SpotifySleepTimer.m).
     NSArray<NSString *> *fades = SGSleepTimerFadeNames();
-    SGModRow *fade = SGMenuRow(@"Fade out", fades, ^NSString *{ return fades[(NSUInteger)SGSleepTimerFadeChoice()]; },
+    SGModRow *fade = SGMenuRow(SGLocalized(@"Fade out"), fades, ^NSString *{ return fades[(NSUInteger)SGSleepTimerFadeChoice()]; },
                                ^(NSInteger index) { SGSetInt(SGKeySleepTimerFade, index); });
-    SGLiveActivityPage *page = [[SGLiveActivityPage alloc] initWithTitle:@"Live Activity" intro:nil sections:@[
+    SGLiveActivityPage *page = [[SGLiveActivityPage alloc] initWithTitle:SGLocalized(@"Live Activity") intro:nil sections:@[
         SGSection(nil, @[missingRow(), on, view, without, alignment, translation, size]),
         SGNotedSection(@"Card", @[artwork, colors, progress],
                        @"Colors: Spotify puts the cover's color behind Spotify's green, Artwork takes the green from the cover too, "

@@ -96,7 +96,7 @@ static void presentStyleSheet(UIViewController *owner) {
     ];
     NSString *footer = @"Blur is how much the lines away from the one sung soften. Glow and Wave are how strongly a held "
                        @"word glows and its letters rise. 100% is Apple Music's.";
-    SGRLyricsStyleSheet *page = [[SGRLyricsStyleSheet alloc] initWithTitle:@"Lyrics Style" intro:nil
+    SGRLyricsStyleSheet *page = [[SGRLyricsStyleSheet alloc] initWithTitle:SGLocalized(@"Lyrics Style") intro:nil
                                                                  sections:@[SGNotedSection(nil, rows, footer)] footer:nil];
     sheetPage = page;
     page.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemClose

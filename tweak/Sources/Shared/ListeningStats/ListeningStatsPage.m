@@ -128,7 +128,7 @@ static void confirmErase(UITableViewController *page) {
         [SGListeningLog() erase];
         [page.tableView reloadData];
     }]];
-    [alert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+    [alert addAction:[UIAlertAction actionWithTitle:SGLocalized(@"Cancel") style:UIAlertActionStyleCancel handler:nil]];
     [SGTopController() presentViewController:alert animated:YES completion:nil];
 }
 
@@ -147,12 +147,12 @@ UIViewController *SGListeningStatsPage(void) {
         [periods addObject:row];
     }
 
-    SGModRow *import = SGWithSymbol(SGStatActionRow(@"Import Spotify's data export", nil,
+    SGModRow *import = SGWithSymbol(SGStatActionRow(SGLocalized(@"Import Spotify's data export"), nil,
                                                     ^NSString *{ return sg_importing ? @"Importing…" : nil; }, nil), @"square.and.arrow.down");
-    SGModRow *erase = SGWithSymbol(SGActionRow(@"Erase listening history", nil, nil), @"trash");
+    SGModRow *erase = SGWithSymbol(SGActionRow(SGLocalized(@"Erase listening history"), nil, nil), @"trash");
     erase.color = SGRed();
-    SGModPage *page = [[SGModPage alloc] initWithTitle:@"Listening stats" intro:nil sections:@[
-        SGNotedSection(nil, @[SGSwitchRow(@"Record plays", nil, SGKeyListeningStats)],
+    SGModPage *page = [[SGModPage alloc] initWithTitle:SGLocalized(@"Listening stats") intro:nil sections:@[
+        SGNotedSection(nil, @[SGSwitchRow(SGLocalized(@"Record plays"), nil, SGKeyListeningStats)],
                        @"A play counts once it has run 30 seconds, or half of a shorter track. Everything stays on this phone."),
         SGSection(nil, periods),
         SGNotedSection(nil, @[

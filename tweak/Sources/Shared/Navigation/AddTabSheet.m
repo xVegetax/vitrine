@@ -147,7 +147,7 @@ static void showProblem(UIViewController *page, NSString *title, NSString *messa
         field.autocapitalizationType = UITextAutocapitalizationTypeNone;
         field.autocorrectionType = UITextAutocorrectionTypeNo;
     }];
-    [alert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+    [alert addAction:[UIAlertAction actionWithTitle:SGLocalized(@"Cancel") style:UIAlertActionStyleCancel handler:nil]];
     [alert addAction:[UIAlertAction actionWithTitle:@"Use Link" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
         [self useLink:alert.textFields.firstObject.text];
     }]];
@@ -208,7 +208,7 @@ static void showProblem(UIViewController *page, NSString *title, NSString *messa
     _search.searchResultsUpdater = self;
     _search.delegate = self;
     _search.obscuresBackgroundDuringPresentation = NO;
-    _search.searchBar.placeholder = @"Search icons";
+    _search.searchBar.placeholder = SGLocalized(@"Search icons");
     _search.searchBar.autocapitalizationType = UITextAutocapitalizationTypeNone;
     _search.searchBar.autocorrectionType = UITextAutocorrectionTypeNo;
     self.navigationItem.searchController = _search;
@@ -377,7 +377,7 @@ typedef NS_ENUM(NSInteger, SGAddTabSection) {
 // The same sheet over a tab already on the bar: its name, link and icon filled in, Save in place of Add.
 - (instancetype)initWithTab:(NSDictionary *)tab presets:(NSArray<NSDictionary *> *)presets save:(void (^)(NSDictionary *tab))save remove:(void (^)(void))remove {
     if (!(self = [self initWithPresets:presets add:save])) return nil;
-    self.title = @"Edit Tab";
+    self.title = SGLocalized(@"Edit Tab");
     _draft.title = tab[SGTabTitle];
     _draft.uri = tab[SGTabURI];
     _draft.icon = tab[SGTabIcon] ?: @"star";
@@ -390,7 +390,7 @@ typedef NS_ENUM(NSInteger, SGAddTabSection) {
 
 - (instancetype)initWithPresets:(NSArray<NSDictionary *> *)presets add:(void (^)(NSDictionary *tab))add {
     if (!(self = [super initWithStyle:UITableViewStyleInsetGrouped])) return nil;
-    self.title = @"Add a Tab";
+    self.title = SGLocalized(@"Add a Tab");
     _draft = [SGTabDraft new];
     _draft.icon = @"star";
     _add = [add copy];
@@ -409,8 +409,8 @@ typedef NS_ENUM(NSInteger, SGAddTabSection) {
     self.tableView.keyboardDismissMode = UIScrollViewKeyboardDismissModeInteractive;
 
     _name = [UITextField new];
-    _name.placeholder = @"Name";
-    _name.accessibilityLabel = @"Name";
+    _name.placeholder = SGLocalized(@"Name");
+    _name.accessibilityLabel = SGLocalized(@"Name");
     _name.font = SGTitleFont();
     _name.textColor = UIColor.whiteColor;
     _name.clearButtonMode = UITextFieldViewModeWhileEditing;
@@ -492,17 +492,17 @@ typedef NS_ENUM(NSInteger, SGAddTabSection) {
     }
     if (path.section == SGAddTabSectionRemove) {
         UITableViewCell *cell = SGDequeueCell(table, @"remove");
-        SGFillCell(cell, @"Remove Tab", nil, SGRed(), nil);
+        SGFillCell(cell, SGLocalized(@"Remove Tab"), nil, SGRed(), nil);
         cell.selectionStyle = UITableViewCellSelectionStyleDefault;
         cell.accessibilityTraits = UIAccessibilityTraitButton;
         return cell;
     }
     UITableViewCell *cell = SGDequeueCell(table, @"customize");
     if (path.row == 0) {
-        SGFillCell(cell, @"Link", _draft.uri ?: @"Choose a page or paste a link", nil, @"link");
+        SGFillCell(cell, SGLocalized(@"Link"), _draft.uri ?: @"Choose a page or paste a link", nil, @"link");
         cell.accessoryView = SGSymbolView(@"chevron.right", 13, UIImageSymbolWeightSemibold, 16);
     } else {
-        SGFillCell(cell, @"Icon", iconSummary(_draft), nil, @"square.grid.2x2");
+        SGFillCell(cell, SGLocalized(@"Icon"), iconSummary(_draft), nil, @"square.grid.2x2");
         cell.accessoryView = withChevron(previewOf(_draft.icon, _draft.symbols, 24));
     }
     cell.selectionStyle = UITableViewCellSelectionStyleDefault;
@@ -530,12 +530,12 @@ typedef NS_ENUM(NSInteger, SGAddTabSection) {
     NSString *name = _draft.title.length ? _draft.title : @"this tab";
     UIAlertController *alert = [UIAlertController alertControllerWithTitle:nil message:[NSString stringWithFormat:@"Remove %@ from the tab bar?", name]
                                                             preferredStyle:UIAlertControllerStyleActionSheet];
-    [alert addAction:[UIAlertAction actionWithTitle:@"Remove Tab" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
+    [alert addAction:[UIAlertAction actionWithTitle:SGLocalized(@"Remove Tab") style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
         void (^remove)(void) = self->_remove;
         [self.presentingViewController dismissViewControllerAnimated:YES completion:nil];
         if (remove) remove();
     }]];
-    [alert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+    [alert addAction:[UIAlertAction actionWithTitle:SGLocalized(@"Cancel") style:UIAlertActionStyleCancel handler:nil]];
     alert.popoverPresentationController.sourceView = [self.tableView cellForRowAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:SGAddTabSectionRemove]];
     [self presentViewController:alert animated:YES completion:nil];
 }

@@ -9,7 +9,7 @@ NSString *const SGFakePremiumWarning = @"This is the part of EeveeSpotify Spotif
 // the thing, off is Spotify's own value. Hide ads and Hide upsells already force the first two
 // sections off, which locks those rows.
 static UIViewController *adFlagsPage(void) {
-    return [[SGModPage alloc] initWithTitle:@"Ad and upsell flags" intro:SGRestartNote sections:@[
+    return [[SGModPage alloc] initWithTitle:SGLocalized(@"Ad and upsell flags") intro:SGRestartNote sections:@[
         SGNotedSection(@"Ads", @[
             SGKillRow(@"Block the ad when the app opens", @"ios-feature-adonappopen.enabled"),
             SGKillRow(@"Block its CTA card", @"ios-feature-adonappopen.cta_card_enabled"),
@@ -19,7 +19,7 @@ static UIViewController *adFlagsPage(void) {
             SGKillRow(@"Hide the shuffle upsell in the video player", @"ios-feature-nowplaying-modes.video_first_shuffle_upsell_enabled"),
         ], @"Locked while Hide upsells is on."),
         SGSection(@"Reduce interventions", @[
-            SGFlagRow(@"Reduce interventions", @"ios-messaging-reduceinterventions-impl.enabled"),
+            SGFlagRow(SGLocalized(@"Reduce interventions"), @"ios-messaging-reduceinterventions-impl.enabled"),
         ]),
         SGSection(@"Tooltips", @[
             SGKillRow(@"Hide the smart shuffle helper", @"ios-messaging-reduceinterventions-impl.enable_message_smart_shuffle_helper_tooltip"),
@@ -49,17 +49,17 @@ UIViewController *SGAdsSettingsPage(void) {
     [counts addObject:SGStatRow(@"Total", ^NSString *{
         return @(SGAdBlockCount(nil)).stringValue;
     })];
-    [counts addObject:SGActionRow(@"Reset the counters", nil, ^{ SGResetAdBlock(); })];
+    [counts addObject:SGActionRow(SGLocalized(@"Reset the counters"), nil, ^{ SGResetAdBlock(); })];
 
-    SGModRow *fakePremium = SGOptionRow(@"Spoof Premium", nil, SGKeyFakePremium);
+    SGModRow *fakePremium = SGOptionRow(SGLocalized(@"Spoof Premium"), nil, SGKeyFakePremium);
     fakePremium.warning = SGFakePremiumWarning;
 
     // The redesign's Search keeps only its category cards, so the video carousel switch is the native look's.
     NSMutableArray<SGModRow *> *ads = [NSMutableArray arrayWithObjects:
-        SGWithSymbol(SGOptionRow(@"Hide ads", nil, SGKeyHideAds), @"speaker.slash"),
-        SGWithSymbol(SGOptionRow(@"Hide upsells", nil, SGKeyHideUpsells), @"hand.raised"), nil];
-    if (!SGRedesignedUIStored()) [ads addObject:SGWithSymbol(SGOptionRow(@"Hide the video carousel in Search", nil, SGKeyHideSearchVideos), @"play.rectangle.on.rectangle")];
-    [ads addObject:SGWithSymbol(SGPageRow(@"Ad and upsell flags", ^UIViewController *{ return adFlagsPage(); }), @"flag")];
+        SGWithSymbol(SGOptionRow(SGLocalized(@"Hide ads"), nil, SGKeyHideAds), @"speaker.slash"),
+        SGWithSymbol(SGOptionRow(SGLocalized(@"Hide upsells"), nil, SGKeyHideUpsells), @"hand.raised"), nil];
+    if (!SGRedesignedUIStored()) [ads addObject:SGWithSymbol(SGOptionRow(SGLocalized(@"Hide the video carousel in Search"), nil, SGKeyHideSearchVideos), @"play.rectangle.on.rectangle")];
+    [ads addObject:SGWithSymbol(SGPageRow(SGLocalized(@"Ad and upsell flags"), ^UIViewController *{ return adFlagsPage(); }), @"flag")];
 
     return [[SGModPage alloc] initWithTitle:@"Premium, ads & privacy" intro:SGRestartNote sections:@[
         SGNotedSection(@"Ads", ads, @"Audio ads between songs need Spoof Premium."),

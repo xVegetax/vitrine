@@ -74,7 +74,7 @@ static void appendTab(NSDictionary *tab) {
 
 - (instancetype)init {
     if (!(self = [super initWithStyle:UITableViewStyleInsetGrouped])) return nil;
-    self.title = @"Split Tabs";
+    self.title = SGLocalized(@"Split Tabs");
     return self;
 }
 
@@ -408,7 +408,7 @@ typedef NS_ENUM(NSInteger, SGRNavbarSection) {
 
 - (instancetype)init {
     if (!(self = [super initWithStyle:UITableViewStyleInsetGrouped])) return nil;
-    self.title = @"Tab bar";
+    self.title = SGLocalized(@"Tab bar");
     return self;
 }
 
@@ -420,8 +420,8 @@ typedef NS_ENUM(NSInteger, SGRNavbarSection) {
     _header = [UIView new];
     [_header addSubview:_preview];
     self.tableView.tableHeaderView = _header;
-    _withNames = [[SGRLabelCard alloc] initWithTitle:@"Icons and names" names:YES];
-    _iconsOnly = [[SGRLabelCard alloc] initWithTitle:@"Icons only" names:NO];
+    _withNames = [[SGRLabelCard alloc] initWithTitle:SGLocalized(@"Icons and names") names:YES];
+    _iconsOnly = [[SGRLabelCard alloc] initWithTitle:SGLocalized(@"Icons only") names:NO];
     for (SGRLabelCard *card in @[_withNames, _iconsOnly]) [card addTarget:self action:@selector(labelsPicked:) forControlEvents:UIControlEventTouchUpInside];
     _entries = navbarEntries();
     [self showChoices];
@@ -583,7 +583,7 @@ typedef NS_ENUM(NSInteger, SGRNavbarSection) {
     UITableViewCell *cell = SGDequeueCell(table, @"navbar");
     switch (path.section) {
         case SGRNavbarSectionSwitch: {
-            SGFillCell(cell, @"Custom tab bar", @"Your order, hidden tabs and tabs you add", nil, nil);
+            SGFillCell(cell, SGLocalized(@"Custom tab bar"), @"Your order, hidden tabs and tabs you add", nil, nil);
             UISwitch *toggle = [UISwitch new];
             toggle.onTintColor = SGGreen();
             toggle.on = SGEnabled(SGRKeyNavbar);
@@ -598,7 +598,7 @@ typedef NS_ENUM(NSInteger, SGRNavbarSection) {
             cell.accessibilityTraits = UIAccessibilityTraitButton;
             break;
         default:
-            SGFillCell(cell, @"Split tabs", @"Place chosen tabs apart on the right", nil, @"rectangle.split.2x1");
+            SGFillCell(cell, SGLocalized(@"Split tabs"), @"Place chosen tabs apart on the right", nil, @"rectangle.split.2x1");
             cell.accessoryView = SGSymbolView(@"chevron.right", 13, UIImageSymbolWeightSemibold, 16);
             cell.selectionStyle = UITableViewCellSelectionStyleDefault;
             break;
@@ -725,11 +725,11 @@ typedef NS_ENUM(NSInteger, SGRNavbarSection) {
 }
 
 - (void)reset {
-    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Use Spotify's tabs"
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:SGLocalized(@"Use Spotify's tabs")
                                                                   message:@"Every tab of Spotify's comes back where Spotify put it, the tabs you added go, and no tab is split apart."
                                                            preferredStyle:UIAlertControllerStyleAlert];
-    [alert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
-    [alert addAction:[UIAlertAction actionWithTitle:@"Reset" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
+    [alert addAction:[UIAlertAction actionWithTitle:SGLocalized(@"Cancel") style:UIAlertActionStyleCancel handler:nil]];
+    [alert addAction:[UIAlertAction actionWithTitle:SGLocalized(@"Reset") style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
         SGRSetNavbarLayout(@[]);
         SGRSetNavbarSplit(@[]);
         SGRRefreshTabBar();

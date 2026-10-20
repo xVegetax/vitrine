@@ -43,7 +43,7 @@ static void showAlert(UIViewController *owner, NSString *title, NSString *messag
 
 static UITableViewCell *errorCell(UITableView *table, NSString *text) {
     UITableViewCell *cell = SGDequeueCell(table, @"error");
-    SGFillCell(cell, @"Not applied", text, SGRed(), @"exclamationmark.triangle.fill");
+    SGFillCell(cell, SGLocalized(@"Not applied"), text, SGRed(), @"exclamationmark.triangle.fill");
     UIListContentConfiguration *content = (UIListContentConfiguration *)cell.contentConfiguration;
     content.secondaryTextProperties.color = SGRed();
     cell.contentConfiguration = content;
@@ -189,7 +189,7 @@ static UITableViewCell *tiledCell(UITableView *table, NSString *title, NSString 
     }
     UITableViewCell *cell = SGDequeueCell(table, @"file");
     if (!_files.count) {
-        SGFillCell(cell, @"No files yet", nil, SGGrey(), nil);
+        SGFillCell(cell, SGLocalized(@"No files yet"), nil, SGGrey(), nil);
         cell.accessibilityTraits = UIAccessibilityTraitNone;
         return cell;
     }
@@ -299,7 +299,7 @@ typedef NS_ENUM(NSInteger, SGGraphicEqRow) {
 
 - (instancetype)init {
     if (!(self = [super initWithStyle:UITableViewStyleInsetGrouped])) return nil;
-    self.title = @"Graphic EQ";
+    self.title = SGLocalized(@"Graphic EQ");
     self.errorKey = SGKeyDSPGraphicEq;
     return self;
 }

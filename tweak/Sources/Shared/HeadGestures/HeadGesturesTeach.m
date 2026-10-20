@@ -272,7 +272,7 @@ static BOOL headOffset(double *pitch, double *yaw) {
     if (!(self = [super initWithNibName:nil bundle:nil])) return nil;
     _closed = [closed copy];
     _samples = [NSMutableArray array];
-    self.title = @"Teach your gestures";
+    self.title = SGLocalized(@"Teach your gestures");
     return self;
 }
 

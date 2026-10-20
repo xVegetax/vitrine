@@ -86,17 +86,17 @@ static NSString *summary(void) {
 }
 
 SGModRow *SGSavedTranslationsRow(void) {
-    return SGStatActionRow(@"Saved translations", @"Songs translated on this iPhone or by Gemini come back translated",
+    return SGStatActionRow(SGLocalized(@"Saved translations"), @"Songs translated on this iPhone or by Gemini come back translated",
                            ^NSString *{ return summary(); }, ^{
         if (!files().count) return;
         UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Delete saved translations?"
             message:@"Songs translated before are translated again the next time you ask." preferredStyle:UIAlertControllerStyleAlert];
-        [alert addAction:[UIAlertAction actionWithTitle:@"Delete" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
+        [alert addAction:[UIAlertAction actionWithTitle:SGLocalized(@"Delete") style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
             [NSFileManager.defaultManager removeItemAtURL:folder() error:nil];
             SGLog(@"translation: saved translations deleted");
             [NSNotificationCenter.defaultCenter postNotificationName:SGLyricsTranslationsDidChangeNotification object:nil];
         }]];
-        [alert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+        [alert addAction:[UIAlertAction actionWithTitle:SGLocalized(@"Cancel") style:UIAlertActionStyleCancel handler:nil]];
         [SGTopController() presentViewController:alert animated:YES completion:nil];
     });
 }

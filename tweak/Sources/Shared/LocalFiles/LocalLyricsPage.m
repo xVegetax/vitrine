@@ -39,7 +39,7 @@ static NSString *playingLocalFile(void) {
 
 - (instancetype)init {
     if (!(self = [super initWithStyle:UITableViewStyleInsetGrouped])) return nil;
-    self.title = @"Imported LRC files";
+    self.title = SGLocalized(@"Imported LRC files");
     return self;
 }
 

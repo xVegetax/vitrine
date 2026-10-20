@@ -66,7 +66,7 @@ typedef NS_ENUM(NSInteger, SGArtistSection) {
     UITableViewCell *cell = SGDequeueCell(table, @"artist");
     switch (path.section) {
         case SGArtistSectionSwitch: {
-            SGFillCell(cell, @"Skip blocked artists", nil, nil, nil);
+            SGFillCell(cell, SGLocalized(@"Skip blocked artists"), nil, nil, nil);
             UISwitch *toggle = [UISwitch new];
             toggle.onTintColor = SGGreen();
             toggle.on = SGFlag(SGKeyArtistBlock, NO);
@@ -87,12 +87,12 @@ typedef NS_ENUM(NSInteger, SGArtistSection) {
             break;
         }
         case SGArtistSectionAdd:
-            SGFillCell(cell, @"Block from what's playing…", nil, nil, @"person.crop.circle.badge.xmark");
+            SGFillCell(cell, SGLocalized(@"Block from what's playing…"), nil, nil, @"person.crop.circle.badge.xmark");
             cell.selectionStyle = UITableViewCellSelectionStyleDefault;
             break;
         default:
             if (!_blocked.count) {
-                SGFillCell(cell, @"No one yet", nil, SGGrey(), nil);
+                SGFillCell(cell, SGLocalized(@"No one yet"), nil, SGGrey(), nil);
                 break;
             }
             NSDictionary *artist = _blocked[(NSUInteger)path.row];
@@ -129,8 +129,8 @@ typedef NS_ENUM(NSInteger, SGArtistSection) {
 - (void)pickFromPlaying:(UIView *)source {
     NSArray<NSDictionary *> *artists = SGPlayingArtists();
     if (!artists.count) {
-        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Nothing playing"
-                                                                      message:@"Play a track by the artist first, then come back here."
+        UIAlertController *alert = [UIAlertController alertControllerWithTitle:SGLocalized(@"Nothing playing")
+                                                                      message:SGLocalized(@"Play a track by the artist first, then come back here.")
                                                                preferredStyle:UIAlertControllerStyleAlert];
         [alert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleCancel handler:nil]];
         [self presentViewController:alert animated:YES completion:nil];
@@ -149,7 +149,7 @@ typedef NS_ENUM(NSInteger, SGArtistSection) {
         action.enabled = !blocked;
         [sheet addAction:action];
     }];
-    [sheet addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+    [sheet addAction:[UIAlertAction actionWithTitle:SGLocalized(@"Cancel") style:UIAlertActionStyleCancel handler:nil]];
     sheet.popoverPresentationController.sourceView = source;
     sheet.popoverPresentationController.sourceRect = source.bounds;
     [self presentViewController:sheet animated:YES completion:nil];

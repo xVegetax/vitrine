@@ -1118,7 +1118,7 @@ void SGRSystemMenuWatch(UIView *button, SGRMenuItems items, SGRMenuKind kind) {
         if (button.accessibilityLabel.length) front.accessibilityLabel = button.accessibilityLabel;
         button.isAccessibilityElement = NO;
     }
-    if (!front.accessibilityLabel.length) front.accessibilityLabel = @"More";
+    if (!front.accessibilityLabel.length) front.accessibilityLabel = SGLocalized(@"More");
     if (front.superview != button) [button addSubview:front];
     else if (button.subviews.lastObject != front) [button bringSubviewToFront:front];
     if (!CGRectEqualToRect(front.frame, button.bounds)) front.frame = button.bounds;

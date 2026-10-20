@@ -107,7 +107,7 @@ static NSString *cellLabel(SGGestureAction action) {
 
 - (instancetype)init {
     if (!(self = [super initWithStyle:UITableViewStyleInsetGrouped])) return nil;
-    self.title = @"Gestures";
+    self.title = SGLocalized(@"Gestures");
     return self;
 }
 
@@ -153,7 +153,7 @@ static NSString *cellLabel(SGGestureAction action) {
             [self refresh];
         }]];
     }];
-    [sheet addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+    [sheet addAction:[UIAlertAction actionWithTitle:SGLocalized(@"Cancel") style:UIAlertActionStyleCancel handler:nil]];
     sheet.popoverPresentationController.sourceView = _grid;
     sheet.popoverPresentationController.sourceRect = _grid.bounds;
     [self presentViewController:sheet animated:YES completion:nil];
@@ -189,7 +189,7 @@ static NSString *cellLabel(SGGestureAction action) {
     UITableViewCell *cell = SGDequeueCell(table, @"gesture");
     switch (path.section) {
         case 0: {
-            SGFillCell(cell, @"Double tap the player", @"Tap a cell to set it", nil, nil);
+            SGFillCell(cell, SGLocalized(@"Double tap the player"), @"Tap a cell to set it", nil, nil);
             UISwitch *toggle = [UISwitch new];
             toggle.onTintColor = SGGreen();
             toggle.on = SGFlag(SGKeyGestures, NO);
@@ -212,7 +212,7 @@ static NSString *cellLabel(SGGestureAction action) {
             break;
         }
         default:
-            SGFillCell(cell, @"Start over", nil, nil, @"arrow.uturn.backward");
+            SGFillCell(cell, SGLocalized(@"Start over"), nil, nil, @"arrow.uturn.backward");
             cell.selectionStyle = UITableViewCellSelectionStyleDefault;
             break;
     }

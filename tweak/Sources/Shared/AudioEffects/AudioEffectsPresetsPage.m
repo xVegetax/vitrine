@@ -50,7 +50,7 @@ static NSArray<NSString *> *userPresetNames(void) {
 
 - (instancetype)init {
     if (!(self = [super initWithStyle:UITableViewStyleInsetGrouped])) return nil;
-    self.title = @"Presets";
+    self.title = SGLocalized(@"Presets");
     _builtIn = SGDSPBuiltInPresetNames();
     return self;
 }
@@ -109,12 +109,12 @@ static NSArray<NSString *> *userPresetNames(void) {
 - (UITableViewCell *)tableView:(UITableView *)table cellForRowAtIndexPath:(NSIndexPath *)path {
     UITableViewCell *cell = SGDequeueCell(table, @"preset");
     if (path.section == 2) {
-        SGFillCell(cell, @"Save current settings…", @"Every effect as it is now, under a name", nil, @"square.and.arrow.down");
+        SGFillCell(cell, SGLocalized(@"Save current settings…"), @"Every effect as it is now, under a name", nil, @"square.and.arrow.down");
         cell.selectionStyle = UITableViewCellSelectionStyleDefault;
         return cell;
     }
     if (path.section == 1 && !_mine.count) {
-        SGFillCell(cell, @"None saved yet", nil, SGGrey(), nil);
+        SGFillCell(cell, SGLocalized(@"None saved yet"), nil, SGGrey(), nil);
         cell.accessibilityTraits = UIAccessibilityTraitNone;
         return cell;
     }
@@ -169,15 +169,15 @@ static NSArray<NSString *> *userPresetNames(void) {
 }
 
 - (void)askForName {
-    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Save preset"
-        message:@"A preset of the same name is replaced." preferredStyle:UIAlertControllerStyleAlert];
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:SGLocalized(@"Save preset")
+        message:SGLocalized(@"A preset of the same name is replaced.") preferredStyle:UIAlertControllerStyleAlert];
     [alert addTextFieldWithConfigurationHandler:^(UITextField *field) {
-        field.placeholder = @"Name";
+        field.placeholder = SGLocalized(@"Name");
         field.autocapitalizationType = UITextAutocapitalizationTypeSentences;
         field.keyboardAppearance = UIKeyboardAppearanceDark;
     }];
-    [alert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
-    [alert addAction:[UIAlertAction actionWithTitle:@"Save" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+    [alert addAction:[UIAlertAction actionWithTitle:SGLocalized(@"Cancel") style:UIAlertActionStyleCancel handler:nil]];
+    [alert addAction:[UIAlertAction actionWithTitle:SGLocalized(@"Save") style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
         NSString *name = [alert.textFields.firstObject.text stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet];
         if (!name.length) return;
         SGDSPSaveUserPreset(name);
@@ -229,7 +229,7 @@ typedef NS_ENUM(NSInteger, SGDSPHeadphoneSection) {
 
 - (instancetype)init {
     if (!(self = [super initWithStyle:UITableViewStyleInsetGrouped])) return nil;
-    self.title = @"Headphones";
+    self.title = SGLocalized(@"Headphones");
     return self;
 }
 
@@ -238,7 +238,7 @@ typedef NS_ENUM(NSInteger, SGDSPHeadphoneSection) {
     UITableView *table = self.tableView;
     table.keyboardDismissMode = UIScrollViewKeyboardDismissModeOnDrag;
     _search = [UISearchBar new];
-    _search.placeholder = @"Search headphones";
+    _search.placeholder = SGLocalized(@"Search headphones");
     _search.searchBarStyle = UISearchBarStyleMinimal;
     _search.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;
     _search.keyboardAppearance = UIKeyboardAppearanceDark;
@@ -421,7 +421,7 @@ static NSString *correctionName(NSString *path) {
     }
     cell.accessibilityValue = nil;
     if (path.section == SGDSPHeadphoneNone) {
-        SGFillCell(cell, @"None", nil, nil, nil);
+        SGFillCell(cell, SGLocalized(@"None"), nil, nil, nil);
         cell.selectionStyle = UITableViewCellSelectionStyleDefault;
         tick(cell, !headphoneInUse());
         return cell;

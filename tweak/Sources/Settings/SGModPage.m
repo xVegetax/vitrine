@@ -7,9 +7,18 @@
 NSString *const SGRestartNote = @"Changes apply after you restart Spotify.";
 
 @implementation SGModRow
+@synthesize title = _title, subtitle = _subtitle, info = _info, warning = _warning, choiceFooter = _choiceFooter;
+- (void)setTitle:(NSString *)text { _title = [SGLocalized(text) copy]; }
+- (void)setSubtitle:(NSString *)text { _subtitle = [SGLocalized(text) copy]; }
+- (void)setInfo:(NSString *)text { _info = [SGLocalized(text) copy]; }
+- (void)setWarning:(NSString *)text { _warning = [SGLocalized(text) copy]; }
+- (void)setChoiceFooter:(NSString *)text { _choiceFooter = [SGLocalized(text) copy]; }
 @end
 
 @implementation SGModSection
+@synthesize title = _title, footer = _footer;
+- (void)setTitle:(NSString *)text { _title = [SGLocalized(text) copy]; }
+- (void)setFooter:(NSString *)text { _footer = [SGLocalized(text) copy]; }
 @end
 
 SGModRow *SGSwitchRow(NSString *title, NSString *subtitle, NSString *key) {
@@ -153,7 +162,7 @@ SGModRow *SGPageRow(NSString *title, UIViewController *(^page)(void)) {
 - (UITableViewCell *)tableView:(UITableView *)table cellForRowAtIndexPath:(NSIndexPath *)path {
     UITableViewCell *cell = SGDequeueCell(table, @"choice");
     NSUInteger index = (NSUInteger)path.row;
-    SGFillCell(cell, _choices[index], index < _notes.count ? _notes[index] : nil, nil, nil);
+    SGFillCell(cell, SGLocalized(_choices[index]), index < _notes.count ? SGLocalized(_notes[index]) : nil, nil, nil);
     cell.selectionStyle = UITableViewCellSelectionStyleDefault;
     if (path.row == SGInt(_key, _fallback)) {
         UIImageView *tick = SGSymbolView(@"checkmark", 13, UIImageSymbolWeightSemibold, 16);
@@ -256,7 +265,7 @@ void SGPickColor(NSString *title, NSInteger initial, void (^picked)(NSInteger rg
     sheet.picker = picker;
     sheet.picked = picked;
     UIBarButtonItem *done = [[UIBarButtonItem alloc] initWithImage:[UIImage systemImageNamed:@"checkmark"] style:UIBarButtonItemStyleDone target:sheet action:@selector(confirm)];
-    done.accessibilityLabel = @"Done";
+    done.accessibilityLabel = SGLocalized(@"Done");
     picker.navigationItem.rightBarButtonItem = done;
     // Inside a navigation controller the picker drops its own close button, so the bar carries one.
     picker.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemClose target:sheet action:@selector(cancel)];
@@ -313,7 +322,7 @@ static const CGFloat kValueMaxWidth = 170;
 // At the accessibility sizes a row's value goes under its title (stackedValue), and the accessories that
 // would carry it beside the title show none.
 static NSString *stackedValue(SGModRow *row) {
-    NSString *value = row.value() ?: @"";
+    NSString *value = SGLocalized(row.value()) ?: @"";
     return row.subtitle.length ? [NSString stringWithFormat:@"%@\n%@", row.subtitle, value] : value;
 }
 
@@ -342,7 +351,7 @@ static UIView *valueView(SGModRow *row) {
     UILabel *label = [UILabel new];
     label.font = SGTitleFont();
     label.textColor = SGGrey();
-    label.text = row.value();
+    label.text = SGLocalized(row.value());
     [label sizeToFit];
     if (!row.swatch) return label;
     CGFloat side = 16, height = MAX(side, label.bounds.size.height);
@@ -818,7 +827,7 @@ static void showWaiting(UITableViewCell *cell, BOOL waiting, NSString *switchTit
         }
         UILabel *label = (UILabel *)cell.accessoryView;
         if (!row.value || row.page || ![label isKindOfClass:UILabel.class]) continue;
-        label.text = row.value();
+        label.text = SGLocalized(row.value());
         [label sizeToFit];
         [cell setNeedsLayout];
     }
@@ -966,7 +975,7 @@ static void showWaiting(UITableViewCell *cell, BOOL waiting, NSString *switchTit
     NSMutableArray<UIAction *> *items = [NSMutableArray array];
     __weak typeof(self) weakSelf = self;
     [row.menu enumerateObjectsUsingBlock:^(NSString *name, NSUInteger i, BOOL *stop) {
-        UIAction *item = [UIAction actionWithTitle:name image:nil identifier:nil handler:^(UIAction *action) {
+        UIAction *item = [UIAction actionWithTitle:SGLocalized(name) image:nil identifier:nil handler:^(UIAction *action) {
             if (row.chosen) row.chosen((NSInteger)i);
             [weakSelf.tableView reloadData];
         }];
@@ -974,7 +983,7 @@ static void showWaiting(UITableViewCell *cell, BOOL waiting, NSString *switchTit
         [items addObject:item];
     }];
     UIButtonConfiguration *look = [UIButtonConfiguration plainButtonConfiguration];
-    NSString *shown = SGAccessibilityTextSize() ? nil : current;   // under the title instead
+    NSString *shown = SGAccessibilityTextSize() ? nil : SGLocalized(current);   // under the title instead
     look.attributedTitle = shown ? [[NSAttributedString alloc] initWithString:shown attributes:@{NSFontAttributeName: SGTitleFont()}] : nil;
     look.image = [UIImage systemImageNamed:@"chevron.up.chevron.down" withConfiguration:[UIImageSymbolConfiguration configurationWithPointSize:11 weight:UIImageSymbolWeightSemibold]];
     look.imagePlacement = NSDirectionalRectEdgeTrailing;

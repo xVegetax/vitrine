@@ -456,7 +456,7 @@ static void askForKey(NSString *problem) {
         field.autocapitalizationType = UITextAutocapitalizationTypeNone;
         field.spellCheckingType = UITextSpellCheckingTypeNo;
     }];
-    UIAlertAction *save = [UIAlertAction actionWithTitle:@"Save" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+    UIAlertAction *save = [UIAlertAction actionWithTitle:SGLocalized(@"Save") style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
         NSString *key = [alert.textFields.firstObject.text stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet];
         if (!key.length) return;
         NSString *wrong = SGSpicyLyricsKeyProblem(key);
@@ -469,16 +469,16 @@ static void askForKey(NSString *problem) {
         [UIApplication.sharedApplication openURL:[NSURL URLWithString:kDashboard] options:@{} completionHandler:nil];
     }]];
     if (SGSpicyLyricsKeySet()) {
-        [alert addAction:[UIAlertAction actionWithTitle:@"Remove" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
+        [alert addAction:[UIAlertAction actionWithTitle:SGLocalized(@"Remove") style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
             setKey(nil);
         }]];
     }
-    [alert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+    [alert addAction:[UIAlertAction actionWithTitle:SGLocalized(@"Cancel") style:UIAlertActionStyleCancel handler:nil]];
     alert.preferredAction = save;
     [SGTopController() presentViewController:alert animated:YES completion:nil];
 }
 
 SGModRow *SGSpicyLyricsKeyRow(void) {
-    return SGStatActionRow(@"Spicy Lyrics key", @"Community word syncs, with your own key",
+    return SGStatActionRow(SGLocalized(@"Spicy Lyrics key"), @"Community word syncs, with your own key",
                            ^NSString *{ return !SGSpicyLyricsKeySet() ? @"Off" : sg_refused ? @"Rejected" : @"Set"; }, ^{ askForKey(nil); });
 }

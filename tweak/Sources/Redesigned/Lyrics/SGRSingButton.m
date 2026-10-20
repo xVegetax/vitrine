@@ -52,7 +52,7 @@ static char kButtonGlassKey, kPanelGlassKey;
     // VoiceOver has the mic itself as one adjustable button: the slider shows only for a held finger and
     // goes again on a timer, which a swipe up or down never holds open.
     self.isAccessibilityElement = YES;
-    self.accessibilityLabel = @"Karaoke";
+    self.accessibilityLabel = SGLocalized(@"Karaoke");
     self.accessibilityHint = @"Turns the vocals down";
     self.accessibilityTraits = UIAccessibilityTraitButton | UIAccessibilityTraitAdjustable;
 
@@ -218,7 +218,7 @@ static char kButtonGlassKey, kPanelGlassKey;
 #pragma mark - the tap
 
 static void tell(NSString *message, NSString *action, void (^then)(void)) {
-    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Karaoke" message:message preferredStyle:UIAlertControllerStyleAlert];
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:SGLocalized(@"Karaoke") message:message preferredStyle:UIAlertControllerStyleAlert];
     // Over the player, which is dark whatever the system's appearance.
     alert.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;
     if (action) [alert addAction:[UIAlertAction actionWithTitle:action style:UIAlertActionStyleDefault handler:^(UIAlertAction *a) { then(); }]];

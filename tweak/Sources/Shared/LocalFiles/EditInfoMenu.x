@@ -197,7 +197,7 @@ static NSString *trimmed(NSString *text) {
 
 - (void)showCover {
     UIListContentConfiguration *content = [UIListContentConfiguration subtitleCellConfiguration];
-    content.text = @"Cover";
+    content.text = SGLocalized(@"Cover");
     content.secondaryText = !_cover ? @"The file's own" : _coverChange == SGCoverPicked ? @"New picture" : @"Your picture";
     content.secondaryTextProperties.color = UIColor.secondaryLabelColor;
     content.image = _cover ?: [UIImage systemImageNamed:@"music.note"];
