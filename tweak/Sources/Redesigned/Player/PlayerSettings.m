@@ -353,7 +353,9 @@ UIViewController *SGRPlayerSettingsPage(NSArray *more) {
         SGSection(nil, @[sources, lowData]),
         SGNotedSection(nil, fluid, @"Brightness above 100% can make white text harder to read. A paused song holds the "
                                    @"background still. Animated and Visualizer use these where they show Fluid."),
-        SGNotedSection(@"Controls", @[SGSwitchRow(@"Volume", nil, SGRKeyPlayerVolume),
+        SGNotedSection(@"Controls", @[SGOptionRow(SGLocalized(@"Landscape player"),
+                                      SGLocalized(@"Turn your iPhone sideways while the player is open"), SGRKeyPlayerLandscape),
+                                      SGSwitchRow(@"Volume", nil, SGRKeyPlayerVolume),
                                       SGOptionRow(SGLocalized(@"Follow the cover"), nil, SGRKeyPlayerFollowsCover)],
                        @"Volume puts a slider under the controls for this iPhone, or the speaker's while Spotify plays on another device. "
                        @"Follow the cover paints the like, shuffle and repeat in the color of the song playing."),

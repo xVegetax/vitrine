@@ -1,4 +1,4 @@
-// Player redesign: the lyrics turn sideways with the phone onto a landscape screen of their own. The cover
+// Player redesign: the player or lyrics turn sideways with the phone onto a landscape screen of their own. The cover
 // is on the left with the title, the artist and the controls under it, and the lines are on the right.
 // A track without lines keeps the screen: the cover grows to the screen's height with the title and the
 // controls beside it, until a track with lines comes on.
@@ -25,6 +25,9 @@ static const CGFloat kBareInfoWidth = 300, kBareControlsWidth = 200;
 static const NSTimeInterval kLandscapeRest = 4;
 
 static UIWindow *sg_window;
+static __weak UIWindowScene *sg_playerScene;
+static __weak UIViewController *sg_visiblePlayer;
+static void orientationChanged(void);
 // Shut from the screen: turning the phone again does not reopen it until it has stood upright.
 static BOOL sg_shut;
 
@@ -66,7 +69,7 @@ static UIButton *controlButton(NSString *symbol, CGFloat size, NSString *label, 
     [button setImage:[UIImage systemImageNamed:symbol withConfiguration:
         [UIImageSymbolConfiguration configurationWithPointSize:size weight:UIImageSymbolWeightBold]] forState:UIControlStateNormal];
     button.tintColor = UIColor.whiteColor;
-    button.accessibilityLabel = label;
+    button.accessibilityLabel = SGLocalized(label);
     [button addTarget:target action:action forControlEvents:UIControlEventTouchUpInside];
     [button.widthAnchor constraintEqualToConstant:kControlSide].active = YES;
     [button.heightAnchor constraintEqualToConstant:kControlSide].active = YES;
@@ -224,7 +227,8 @@ static UIButton *controlButton(NSString *symbol, CGFloat size, NSString *label, 
 // takes the lines away: the player may not have heard of it yet, and would still count the last one's grace.
 - (void)updateBare:(BOOL)mayGoBare {
     BOOL bare = _bare;
-    if (SGRPlayerLyricsAvailable()) bare = NO;
+    if (!SGRPlayerLyricsOpen()) bare = YES;
+    else if (SGRPlayerLyricsAvailable()) bare = NO;
     else if (mayGoBare && SGRPlayerLyricsNone()) bare = YES;
     if (bare == _bare) return;
     _bare = bare;
@@ -257,7 +261,7 @@ static UIButton *controlButton(NSString *symbol, CGFloat size, NSString *label, 
     _artist.text = state.track.artistName;
     [_play setImage:[UIImage systemImageNamed:state.isPaused ? @"play.fill" : @"pause.fill" withConfiguration:
         [UIImageSymbolConfiguration configurationWithPointSize:30 weight:UIImageSymbolWeightBold]] forState:UIControlStateNormal];
-    _play.accessibilityLabel = state.isPaused ? @"Play" : @"Pause";
+    _play.accessibilityLabel = SGLocalized(state.isPaused ? @"Play" : @"Pause");
     _field.motionHeld = state.isPaused;
     // A pause brings the controls back and keeps them; playing again, from here or anywhere, starts the
     // clock. The tap on the play button cannot: the state saying so arrives a beat after it.
@@ -387,8 +391,9 @@ void SGRPlayerLandscapeLinesChanged(void) {
 }
 
 void SGRPlayerShowLandscape(BOOL show) {
-    UIWindowScene *scene = (UIWindowScene *)UIApplication.sharedApplication.connectedScenes.anyObject;
-    if (![scene isKindOfClass:UIWindowScene.class]) return;
+    UIWindowScene *scene = sg_window.windowScene ?: sg_playerScene;
+    if (!scene) return;
+    if (show && (!sg_visiblePlayer || scene.activationState != UISceneActivationStateForegroundActive)) return;
     if (show && !sg_window) {
         answerForOrientations();
         sg_window = [[UIWindow alloc] initWithWindowScene:scene];
@@ -425,10 +430,24 @@ void SGRPlayerShowLandscape(BOOL show) {
     }
 }
 
+void SGRPlayerLandscapeSetVisible(UIViewController *player, BOOL visible) {
+    if (visible) {
+        sg_visiblePlayer = player;
+        sg_playerScene = player.viewIfLoaded.window.windowScene;
+        dispatch_async(dispatch_get_main_queue(), ^{ orientationChanged(); });
+    } else if (sg_visiblePlayer == player) {
+        sg_visiblePlayer = nil;
+        SGRPlayerShowLandscape(NO);
+        sg_playerScene = nil;
+    }
+}
+
 static void orientationChanged(void) {
     UIDeviceOrientation orientation = UIDevice.currentDevice.orientation;
     if (UIDeviceOrientationIsLandscape(orientation)) {
-        if (!sg_shut && SGEnabled(SGRKeyLyricsLandscape) && SGRPlayerLyricsOpen()) SGRPlayerShowLandscape(YES);
+        BOOL allowed = SGEnabled(SGRKeyPlayerLandscape) ||
+                       (SGEnabled(SGRKeyLyricsLandscape) && SGRPlayerLyricsOpen());
+        if (!sg_shut && allowed && sg_visiblePlayer) SGRPlayerShowLandscape(YES);
     } else if (orientation == UIDeviceOrientationPortrait) {
         sg_shut = NO;
         SGRPlayerShowLandscape(NO);
@@ -440,6 +459,8 @@ static void orientationChanged(void) {
     dispatch_async(dispatch_get_main_queue(), ^{
         [UIDevice.currentDevice beginGeneratingDeviceOrientationNotifications];
         [NSNotificationCenter.defaultCenter addObserverForName:UIDeviceOrientationDidChangeNotification object:nil queue:nil
-                                                    usingBlock:^(NSNotification *note) { orientationChanged(); }];
+                                                    usingBlock:^(NSNotification *note) {
+            dispatch_async(dispatch_get_main_queue(), ^{ orientationChanged(); });
+        }];
     });
 }

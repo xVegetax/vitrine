@@ -504,5 +504,12 @@
   "The newest version of Vitrine, leaning toward Apple Music's style. It is not compatible with the legacy look's settings.\n\nThe legacy look gives you more freedom, yet still looks like Spotify.": "La nouvelle interface de Vitrine, inspirée du style d’Apple Music. Elle n’est pas compatible avec les réglages de l’interface native.\n\nL’interface native offre davantage de liberté tout en conservant l’apparence de Spotify.",
   "Spotify's own look comes back when Spotify starts again. Spotify closes now; open it again to see it.": "L’interface native de Spotify revient au prochain lancement. Spotify va se fermer ; rouvrez-le pour la découvrir.",
   "Pronunciation and translation are turned on from the button in the lyrics' corner.": "La prononciation et la traduction s’activent avec le bouton dans le coin des paroles.",
-  "Blur is how much the lines away from the one sung soften. Glow and Wave are how strongly a held word glows and its letters rise. 100% is Apple Music's.": "Flou règle le floutage des lignes éloignées de la ligne chantée. Lueur et Ondulation règlent l’intensité lumineuse des mots tenus et le mouvement de leurs lettres. 100 % correspond au rendu d’Apple Music."
+  "Blur is how much the lines away from the one sung soften. Glow and Wave are how strongly a held word glows and its letters rise. 100% is Apple Music's.": "Flou règle le floutage des lignes éloignées de la ligne chantée. Lueur et Ondulation règlent l’intensité lumineuse des mots tenus et le mouvement de leurs lettres. 100 % correspond au rendu d’Apple Music.",
+  "Landscape player": "Lecteur en paysage",
+  "Turn your iPhone sideways while the player is open": "Tournez votre iPhone lorsque le lecteur est ouvert",
+  "Exit full screen": "Quitter le plein écran",
+  "Play": "Lire",
+  "Pause": "Pause",
+  "Previous track": "Titre précédent",
+  "Next track": "Titre suivant"
 }
