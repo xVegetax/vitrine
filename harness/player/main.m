@@ -612,6 +612,7 @@ static void loadLyrics(void) {
     else if ([scenario() isEqualToString:@"look"]) [self runLook];
     else if ([scenario() isEqualToString:@"scroll"]) [self runScrollChecks];
     else if ([scenario() isEqualToString:@"landscape"]) [self runLandscape];
+    else if ([scenario() isEqualToString:@"landscape-denied"]) [self runLandscapeDenied];
     else if ([scenario() isEqualToString:@"motion"]) [self runMotionChecks];
     else if ([scenario() isEqualToString:@"catalog"]) [self runCatalogChecks];
     else if ([scenario() isEqualToString:@"badge"]) [self runBadgeChecks];
@@ -719,8 +720,87 @@ static void logLandscape(NSString *step, NSString *want) {
 // The landscape lyrics as a turned phone shows them: a line's meanings over them as a card on the bottom
 // edge, the controls staying up behind the sheet and fading once it is gone, the shield taking the touch
 // that brings them back, and a pause and a resume from elsewhere starting the clock again.
+- (void)checkLandscapeProgress {
+    extern NSUInteger SGRHarnessSeekCount(void);
+    UIViewController *screen = landscapeScreen();
+    UISlider *slider = [screen valueForKey:@"slider"];
+    __block NSUInteger passed = 0, total = 0;
+    void (^check)(NSString *, BOOL) = ^(NSString *name, BOOL ok) {
+        total++; if (ok) passed++;
+        NSLog(@"[harness] landscape progress %@: %@", name, ok ? @"PASS" : @"FAIL");
+    };
+    if (!screen || !slider) { check(@"screen and slider exist", NO); return; }
+    check(@"44pt adjustable slider", slider.bounds.size.height >= 44 && slider.accessibilityLabel.length && slider.enabled);
+    CGRect safe = UIEdgeInsetsInsetRect(screen.view.bounds, screen.view.safeAreaInsets);
+    UIView *progress = [screen valueForKey:@"progress"];
+    check(@"progress inside safe area", CGRectContainsRect(safe, progress.frame));
+    NSUInteger before = SGRHarnessSeekCount();
+    [slider sendActionsForControlEvents:UIControlEventTouchDown];
+    slider.value = 30;
+    [slider sendActionsForControlEvents:UIControlEventValueChanged];
+    check(@"drag previews without seeking", SGRHarnessSeekCount() == before);
+    ((void (*)(id, SEL))objc_msgSend)(screen, NSSelectorFromString(@"rest"));
+    check(@"drag cannot auto-hide", ![[screen valueForKey:@"shield"] superview]);
+    [slider sendActionsForControlEvents:UIControlEventTouchCancel];
+    check(@"cancel does not seek", SGRHarnessSeekCount() == before);
+    [slider sendActionsForControlEvents:UIControlEventTouchDown];
+    slider.value = 30;
+    [slider sendActionsForControlEvents:UIControlEventTouchUpInside];
+    check(@"release seeks once", SGRHarnessSeekCount() == before + 1 && labs(SGKaraokePositionMs() - 30000) < 100);
+    [slider accessibilityIncrement];
+    check(@"VoiceOver advances five seconds", SGRHarnessSeekCount() == before + 2 && labs(SGKaraokePositionMs() - 35000) < 100);
+    [slider accessibilityDecrement];
+    check(@"VoiceOver goes back five seconds", labs(SGKaraokePositionMs() - 30000) < 100);
+    [slider sendActionsForControlEvents:UIControlEventTouchDown];
+    NSString *uri = SGURIString(SGPlayerState().track.URI);
+    [SGPlayerState().track setValue:@"spotify:track:changed-during-drag" forKey:@"URI"];
+    [(id<SGPlayerStateObserver>)screen playerStateDidChange:SGPlayerState()];
+    before = SGRHarnessSeekCount();
+    [slider sendActionsForControlEvents:UIControlEventTouchUpInside];
+    check(@"changed song cancels seek", SGRHarnessSeekCount() == before);
+    [SGPlayerState().track setValue:uri forKey:@"URI"];
+    [SGPlayerState() setValue:@0 forKey:@"duration"];
+    [(id<SGPlayerStateObserver>)screen playerStateDidChange:SGPlayerState()];
+    [slider accessibilityIncrement];
+    check(@"unknown duration disables seeking", !slider.enabled && SGRHarnessSeekCount() == before);
+    [SGPlayerState() setValue:@200 forKey:@"duration"];
+    [(id<SGPlayerStateObserver>)screen playerStateDidChange:SGPlayerState()];
+    UIButton *play = [screen valueForKey:@"play"];
+    BOOL paused = SGPlayerState().isPaused;
+    [play sendActionsForControlEvents:UIControlEventTouchUpInside];
+    check(@"play button sends command", SGPlayerState().isPaused != paused);
+    [play sendActionsForControlEvents:UIControlEventTouchUpInside];
+    NSLog(@"[harness] landscape progress checks: %lu of %lu -- %@", (unsigned long)passed, (unsigned long)total,
+          passed == total ? @"PASS" : @"FAIL");
+}
+
+- (void)runLandscapeDenied {
+    SGRPlayerLandscapeSetVisible(self.window.rootViewController, YES);
+    after(3, ^{
+        // Simulate UIKit rejecting only this request, without changing production code.
+        SEL selector = @selector(requestGeometryUpdateWithPreferences:errorHandler:);
+        Method method = class_getInstanceMethod(UIWindowScene.class, selector);
+        if (!method) { NSLog(@"[harness] landscape denied: unavailable -- FAIL"); return; }
+        IMP replacement = imp_implementationWithBlock(^(UIWindowScene *scene, UIWindowSceneGeometryPreferences *preferences, void (^error)(NSError *)) {
+            error([NSError errorWithDomain:@"harness.rotation" code:1 userInfo:nil]);
+        });
+        IMP original = method_setImplementation(method, replacement);
+        SGRPlayerShowLandscape(YES);
+        method_setImplementation(method, original);
+        imp_removeBlock(replacement);
+    });
+    after(4, ^{
+        BOOL ok = !landscapeScreen() && self.window.isKeyWindow;
+        NSLog(@"[harness] landscape denied: no overlay, previous window key -- %@", ok ? @"PASS" : @"FAIL");
+    });
+}
+
 - (void)runLandscape {
-    after(3, ^{ SGRPlayerShowLandscape(YES); });
+    SGRPlayerLandscapeSetVisible(self.window.rootViewController, YES);
+    after(3, ^{
+        [SGPlayerState() setValue:@200 forKey:@"duration"];
+        SGRPlayerShowLandscape(YES);
+    });
     // The window comes up clear and fades in with the turn; it and what it presents are dark; the
     // controls say what they do and are 44pt.
     after(3.05, ^{
@@ -746,6 +826,7 @@ static void logLandscape(NSString *step, NSString *want) {
               NSStringFromCGRect([[screen valueForKey:@"_close"] frame]));
     });
     after(4, ^{
+        [self checkLandscapeProgress];
         SGLyricsMeaning *meaning = [SGLyricsMeaning new];
         meaning.author = SGLyricsMeaningByArtist;
         meaning.body = @"A line of the harness's song, explained at the length Genius explains one, so the card has a body to show and to wrap.";
@@ -769,7 +850,12 @@ static void logLandscape(NSString *step, NSString *want) {
     after(17, ^{ logLandscape(@"just resumed", @"lines"); });
     after(21, ^{ logLandscape(@"rested after the resume", @"shield"); });
     // VoiceOver's escape turns the screen back, and the player is key once it has faded.
-    after(22, ^{ NSLog(@"[harness] landscape escape answered %d", [landscapeScreen() accessibilityPerformEscape]); });
+    after(22, ^{
+        UIViewController *screen = landscapeScreen();
+        NSLog(@"[harness] landscape escape answered %d", [screen accessibilityPerformEscape]);
+        BOOL stopped = screen && ![screen valueForKey:@"progressTimer"];
+        NSLog(@"[harness] landscape progress timer stopped on close -- %@", stopped ? @"PASS" : @"FAIL");
+    });
     after(23, ^{
         BOOL gone = !landscapeScreen(), key = self.window.isKeyWindow;
         NSLog(@"[harness] landscape after the escape: gone %d, the player key %d -- %@", gone, key, gone && key ? @"ok" : @"WRONG");

@@ -40,6 +40,13 @@ come late, out of order, or not at all.
   the safe area with a grabber, where the sheet before it covered the whole screen. It also logs that the
   window comes up clear and fades in, dark, that every button has a label and 44pt, and at 22 s that
   VoiceOver's escape takes the screen away and gives the key back to the player.
+  It also checks the landscape progress slider (44pt, inside the safe area), drag preview,
+  cancellation, one seek on release, VoiceOver's five-second adjustments, cancellation after a
+  track change, unknown duration, and play/pause commands. The summary is
+  `landscape progress checks: n of n -- PASS` or `FAIL`.
+- `landscape-denied` makes UIKit reject the landscape geometry request, then checks that the
+  overlay disappears and the previous window is key. Run on an initially portrait simulator.
+  It ends with `landscape denied: no overlay, previous window key -- PASS` or `FAIL`.
 - `scroll` moves the list up and down in code and logs whether it stayed at its top, then scrubs a mock of
   the progress bar's slider in code (issue #172): the list's pan off while it tracks, back at its end, at a
   cancel and when the slider leaves the window, and a pan that was off already left off. The log ends

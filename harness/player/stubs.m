@@ -104,7 +104,27 @@ void SGKaraokeKeepLines(NSString *trackID, NSArray<SGKaraokeLine *> *lines) { sg
 void SGKaraokeRequestLyrics(NSString *trackID) {}
 NSNotificationName const SGKaraokeLinesKeptNotification = @"harness.karaokeLinesKept";
 BOOL SGKaraokeLooking(NSString *trackID) { return NO; }
-id SGKaraokePlayer(void) { return nil; }
+@interface SGRLandscapeHarnessPlayer : NSObject
+@end
+@implementation SGRLandscapeHarnessPlayer
+- (void)seekTo:(double)seconds { SGKaraokeSeek((NSInteger)(seconds * 1000)); }
+- (id)setPaused:(BOOL)paused {
+    [sg_state setValue:@(paused) forKey:@"isPaused"];
+    for (id<SGPlayerStateObserver> observer in sg_observers.allObjects) [observer playerStateDidChange:sg_state];
+    return nil;
+}
+- (id)pause:(id)options { return [self setPaused:YES]; }
+- (id)resume:(id)options { return [self setPaused:NO]; }
+- (id)skipToPreviousTrackWithOptions:(id)options { return nil; }
+- (id)skipToNextTrackWithOptions:(id)options { return nil; }
+@end
+id SGKaraokePlayer(void) {
+    // Other scenarios rely on having no command player; keep their behavior intact.
+    if (![NSProcessInfo.processInfo.environment[@"HARNESS_SCENARIO"] isEqualToString:@"landscape"]) return nil;
+    static SGRLandscapeHarnessPlayer *player;
+    if (!player) player = [SGRLandscapeHarnessPlayer new];
+    return player;
+}
 SPTPlayerTrack *SGKaraokeTrackFor(NSString *trackID) { return nil; }
 void SGKaraokeRememberTrack(SPTPlayerTrack *track) {}
 
@@ -115,7 +135,10 @@ NSInteger SGKaraokePositionMs(void) {
     if (!sg_started) return sg_position;
     return sg_position + (NSInteger)((CACurrentMediaTime() - sg_started) * 1000);
 }
+static NSUInteger sg_seekCount;
+NSUInteger SGRHarnessSeekCount(void) { return sg_seekCount; }
 void SGKaraokeSeek(NSInteger ms) {
+    sg_seekCount++;
     sg_position = ms;
     sg_started = CACurrentMediaTime();
 }

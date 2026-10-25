@@ -12,6 +12,7 @@
 // answers landscape for this screen's own window and portrait for every other, and the scene is asked to
 // turn while the window is up. Spotify's own windows never turn.
 #import <objc/runtime.h>
+#import <math.h>
 #import "Core/SGCore.h"
 #import "Redesigned/Kit/SGRKit.h"
 #import "Redesigned/Lyrics/SGRKaraokeView.h"
@@ -23,17 +24,33 @@ static const CGFloat kSide = 32, kCoverGap = 16, kControlSide = 44, kColumnShare
 // The title and the controls beside the cover of a track without lines.
 static const CGFloat kBareInfoWidth = 300, kBareControlsWidth = 200;
 static const NSTimeInterval kLandscapeRest = 4;
+static const CGFloat kProgressHeight = 62;
 
 static UIWindow *sg_window;
 static __weak UIWindowScene *sg_playerScene;
 static __weak UIViewController *sg_visiblePlayer;
+static __weak UIWindow *sg_previousKeyWindow;
 static void orientationChanged(void);
 // Shut from the screen: turning the phone again does not reopen it until it has stood upright.
 static BOOL sg_shut;
 
 #pragma mark - the screen
 
-@interface SGRLandscapeLyricsController : UIViewController <SGPlayerStateObserver>
+// UIKit's slider supplies the adjustable VoiceOver trait; use a predictable five-second step.
+@interface SGRLandscapeProgressSlider : UISlider
+@end
+@implementation SGRLandscapeProgressSlider
+- (void)step:(float)seconds {
+    if (!self.enabled) return;
+    self.value = MIN(self.maximumValue, MAX(self.minimumValue, self.value + seconds));
+    [self sendActionsForControlEvents:UIControlEventValueChanged];
+}
+- (void)accessibilityIncrement { [self step:5]; }
+- (void)accessibilityDecrement { [self step:-5]; }
+@end
+
+@interface SGRLandscapeLyricsController : UIViewController <SGPlayerStateObserver, UIGestureRecognizerDelegate>
+- (void)stopProgress;
 @end
 
 @implementation SGRLandscapeLyricsController {
@@ -42,6 +59,14 @@ static BOOL sg_shut;
     SGMarqueeLabel *_title, *_artist;
     UIStackView *_controls;
     UIButton *_play, *_close;
+    UIView *_progress;
+    SGRLandscapeProgressSlider *_slider;
+    UILabel *_elapsed, *_remaining;
+    NSTimer *_progressTimer;
+    BOOL _scrubbing;
+    NSString *_scrubTrack, *_progressTrack;
+    CFTimeInterval _seekUntil;
+    double _seekPosition;
     UIView *_stage;   // the lines' own view: the karaoke view dims every sibling it has
     SGRKaraokeView *_lyrics;
     NSTimer *_rest;
@@ -91,6 +116,7 @@ static UIButton *controlButton(NSString *symbol, CGFloat size, NSString *label, 
 - (void)viewDidLoad {
     [super viewDidLoad];
     self.view.backgroundColor = UIColor.blackColor;
+    self.view.accessibilityViewIsModal = YES;
 
     // The player's own field behind the screen, so the colors carry over from the portrait player.
     _field = [[SGRArtworkField alloc] initWithFrame:self.view.bounds];
@@ -131,6 +157,27 @@ static UIButton *controlButton(NSString *symbol, CGFloat size, NSString *label, 
     _controls.alignment = UIStackViewAlignmentCenter;
     [self.view addSubview:_controls];
 
+    _progress = [UIView new];
+    _slider = [SGRLandscapeProgressSlider new];
+    _slider.minimumValue = 0;
+    _slider.tintColor = SGRPrimary();
+    _slider.accessibilityLabel = SGLocalized(@"Playback position");
+    [_slider addTarget:self action:@selector(beginScrubbing) forControlEvents:UIControlEventTouchDown];
+    [_slider addTarget:self action:@selector(progressChanged) forControlEvents:UIControlEventValueChanged];
+    [_slider addTarget:self action:@selector(finishScrubbing) forControlEvents:UIControlEventTouchUpInside | UIControlEventTouchUpOutside];
+    [_slider addTarget:self action:@selector(cancelScrubbing) forControlEvents:UIControlEventTouchCancel];
+    [_progress addSubview:_slider];
+    _elapsed = [UILabel new];
+    _remaining = [UILabel new];
+    for (UILabel *label in @[_elapsed, _remaining]) {
+        label.font = [UIFont monospacedDigitSystemFontOfSize:12 weight:UIFontWeightRegular];
+        label.textColor = SGRSecondary();
+        label.isAccessibilityElement = NO; // The slider announces both times as one adjustable element.
+        [_progress addSubview:label];
+    }
+    _remaining.textAlignment = NSTextAlignmentRight;
+    [self.view addSubview:_progress];
+
     _stage = [UIView new];
     [self.view addSubview:_stage];
     _lyrics = [[SGRKaraokeView alloc] initWithFrame:CGRectZero];
@@ -140,6 +187,7 @@ static UIButton *controlButton(NSString *symbol, CGFloat size, NSString *label, 
     _lyrics.browsingBegan = ^{ [weakSelf rest]; };
 
     _hide = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(rest)];
+    _hide.delegate = self;
     [self.view addGestureRecognizer:_hide];
     _shield = [[UIView alloc] initWithFrame:self.view.bounds];
     _shield.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
@@ -159,6 +207,7 @@ static UIButton *controlButton(NSString *symbol, CGFloat size, NSString *label, 
 - (void)dealloc {
     [NSNotificationCenter.defaultCenter removeObserver:self];
     [_rest invalidate];
+    [_progressTimer invalidate];
 }
 
 - (void)viewDidLayoutSubviews {
@@ -168,19 +217,21 @@ static UIButton *controlButton(NSString *symbol, CGFloat size, NSString *label, 
     CGFloat left = CGRectGetMinX(safe) + kSide;
     CGFloat titleHeight = ceil(_title.font.lineHeight), artistHeight = ceil(_artist.font.lineHeight);
     CGFloat textHeight = MAX(titleHeight + artistHeight, kControlSide), controlsHeight = kControlSide;
-    CGFloat side = MIN(column - kSide, safe.size.height - 2 * kSide - textHeight - controlsHeight - 2 * kCoverGap);
-    CGFloat top = CGRectGetMidY(safe) - (side + kCoverGap + textHeight + kCoverGap + controlsHeight) / 2;
-    _cover.frame = CGRectMake(left, top, side, side);
+    CGFloat width = MAX(3 * kControlSide, column - kSide);
+    CGFloat side = MAX(0, MIN(width, safe.size.height - 2 * kSide - textHeight - controlsHeight - kProgressHeight - kCoverGap));
+    CGFloat top = CGRectGetMidY(safe) - (side + kCoverGap + textHeight + kProgressHeight + controlsHeight) / 2;
+    _cover.frame = CGRectMake(left + (width - side) / 2, top, side, side);
     // The close button at the text's trailing end, its glyph (about 20pt in the 44pt square) at the cover's edge.
     CGFloat textTop = CGRectGetMaxY(_cover.frame) + kCoverGap;
-    _close.frame = CGRectMake(left + side - kControlSide + 12, textTop + (textHeight - kControlSide) / 2, kControlSide, kControlSide);
-    _title.frame = CGRectMake(left, textTop + (textHeight - titleHeight - artistHeight) / 2, side - kControlSide, titleHeight);
-    _artist.frame = CGRectMake(left, CGRectGetMaxY(_title.frame), side - kControlSide, artistHeight);
-    _controls.frame = CGRectMake(left + side * 0.1, textTop + textHeight + kCoverGap, side * 0.8, controlsHeight);
-    CGFloat linesLeft = left + side + kSide;
+    _close.frame = CGRectMake(left + width - kControlSide, textTop + (textHeight - kControlSide) / 2, kControlSide, kControlSide);
+    _title.frame = CGRectMake(left, textTop + (textHeight - titleHeight - artistHeight) / 2, width - kControlSide, titleHeight);
+    _artist.frame = CGRectMake(left, CGRectGetMaxY(_title.frame), width - kControlSide, artistHeight);
+    _progress.frame = CGRectMake(left, textTop + textHeight, width, kProgressHeight);
+    _controls.frame = CGRectMake(left, CGRectGetMaxY(_progress.frame), width, controlsHeight);
+    CGFloat linesLeft = left + width + kSide;
     _stage.frame = CGRectMake(linesLeft, CGRectGetMinY(safe), CGRectGetMaxX(safe) - linesLeft, safe.size.height);
     _lyrics.frame = _stage.bounds;
-    if (!_bare) return;
+    if (!_bare) { [self layoutProgress]; return; }
 
     // The cover at the screen's height and the title and controls beside it, the two centered as one. The
     // lines keep their place above, so they come back from where they will stand.
@@ -189,16 +240,45 @@ static UIButton *controlButton(NSString *symbol, CGFloat size, NSString *label, 
     CGFloat x = CGRectGetMidX(safe) - (side + kSide + info) / 2;
     _cover.frame = CGRectMake(x, CGRectGetMidY(safe) - side / 2, side, side);
     CGFloat infoLeft = x + side + kSide;
-    textTop = CGRectGetMidY(safe) - (textHeight + kCoverGap + controlsHeight) / 2;
-    _close.frame = CGRectMake(infoLeft + info - kControlSide + 12, textTop + (textHeight - kControlSide) / 2, kControlSide, kControlSide);
+    textTop = CGRectGetMidY(safe) - (textHeight + kProgressHeight + controlsHeight) / 2;
+    _close.frame = CGRectMake(infoLeft + info - kControlSide, textTop + (textHeight - kControlSide) / 2, kControlSide, kControlSide);
     _title.frame = CGRectMake(infoLeft, textTop + (textHeight - titleHeight - artistHeight) / 2, info - kControlSide, titleHeight);
     _artist.frame = CGRectMake(infoLeft, CGRectGetMaxY(_title.frame), info - kControlSide, artistHeight);
-    _controls.frame = CGRectMake(infoLeft, textTop + textHeight + kCoverGap, MIN(kBareControlsWidth, info), controlsHeight);
+    _progress.frame = CGRectMake(infoLeft, textTop + textHeight, info, kProgressHeight);
+    _controls.frame = CGRectMake(infoLeft, CGRectGetMaxY(_progress.frame), MIN(kBareControlsWidth, info), controlsHeight);
+    [self layoutProgress];
+}
+
+- (void)layoutProgress {
+    CGFloat width = _progress.bounds.size.width;
+    _slider.frame = CGRectMake(0, 0, width, 44);
+    _elapsed.frame = CGRectMake(0, 44, width / 2, 18);
+    _remaining.frame = CGRectMake(width / 2, 44, width / 2, 18);
 }
 
 - (void)viewDidAppear:(BOOL)animated {
     [super viewDidAppear:animated];
     [self restartRest];
+    [self updateProgress];
+    __weak SGRLandscapeLyricsController *weakSelf = self;
+    [_progressTimer invalidate];
+    _progressTimer = [NSTimer scheduledTimerWithTimeInterval:0.5 repeats:YES block:^(NSTimer *timer) {
+        [weakSelf updateProgress];
+    }];
+}
+
+- (void)stopProgress {
+    [_progressTimer invalidate];
+    _progressTimer = nil;
+    [_rest invalidate];
+    _rest = nil;
+    _scrubbing = NO;
+    _scrubTrack = nil;
+}
+
+- (void)viewDidDisappear:(BOOL)animated {
+    [super viewDidDisappear:animated];
+    [self stopProgress];
 }
 
 // The window comes up clear and fades in as the scene turns, so the screen is never seen laid out upright.
@@ -263,6 +343,11 @@ static UIButton *controlButton(NSString *symbol, CGFloat size, NSString *label, 
         [UIImageSymbolConfiguration configurationWithPointSize:30 weight:UIImageSymbolWeightBold]] forState:UIControlStateNormal];
     _play.accessibilityLabel = SGLocalized(state.isPaused ? @"Play" : @"Pause");
     _field.motionHeld = state.isPaused;
+    [self updateProgress];
+    id player = self.player;
+    _play.enabled = [player respondsToSelector:state.isPaused ? @selector(resume:) : @selector(pause:)];
+    ((UIButton *)_controls.arrangedSubviews.firstObject).enabled = [player respondsToSelector:@selector(skipToPreviousTrackWithOptions:)];
+    ((UIButton *)_controls.arrangedSubviews.lastObject).enabled = [player respondsToSelector:@selector(skipToNextTrackWithOptions:)];
     // A pause brings the controls back and keeps them; playing again, from here or anywhere, starts the
     // clock. The tap on the play button cannot: the state saying so arrives a beat after it.
     if (state.isPaused) [self setControlsShown:YES];
@@ -271,6 +356,86 @@ static UIButton *controlButton(NSString *symbol, CGFloat size, NSString *label, 
 
 #pragma mark - controls
 
+static NSString *clockText(double seconds) {
+    NSInteger whole = (NSInteger)MAX(0, floor(seconds));
+    return [NSString stringWithFormat:@"%ld:%02ld", (long)(whole / 60), (long)(whole % 60)];
+}
+
+- (void)showPosition:(double)position duration:(double)duration {
+    _elapsed.text = clockText(position);
+    _remaining.text = [@"−" stringByAppendingString:clockText(MAX(0, duration - position))];
+    _slider.accessibilityValue = [NSString stringWithFormat:SGLocalized(@"%@ of %@"), clockText(position), clockText(duration)];
+}
+
+- (void)updateProgress {
+    if (self.view.window.hidden || self.view.window.windowScene.activationState != UISceneActivationStateForegroundActive) return;
+    SPTPlayerState *state = SGPlayerState();
+    NSString *track = SGURIString(state.track.URI);
+    if (![_progressTrack isEqualToString:track]) {
+        _progressTrack = [track copy];
+        _seekUntil = 0;
+        _scrubTrack = nil; // A drag started on another song must never seek this one.
+    }
+    double duration = state.duration;
+    NSInteger ms = SGKaraokePositionMs();
+    BOOL valid = track.length && isfinite(duration) && duration > 0 && duration < NSIntegerMax / 1000.0 && ms >= 0;
+    _slider.enabled = valid && [SGKaraokePlayer() respondsToSelector:@selector(seekTo:)];
+    if (_scrubbing) return;
+    _slider.maximumValue = valid ? duration : 1;
+    double position = valid ? MIN(duration, MAX(0, ms / 1000.0)) : 0;
+    if (valid && _seekUntil > CACurrentMediaTime() && fabs(position - _seekPosition) > 1) position = MIN(duration, _seekPosition);
+    else _seekUntil = 0;
+    _slider.value = position;
+    if (valid) [self showPosition:position duration:duration];
+    else {
+        _elapsed.text = _remaining.text = @"–:––";
+        _slider.accessibilityValue = SGLocalized(@"Unavailable");
+    }
+}
+
+- (void)beginScrubbing {
+    _scrubbing = YES;
+    _scrubTrack = [SGURIString(SGPlayerState().track.URI) copy];
+    [_rest invalidate];
+    _rest = nil;
+}
+
+- (void)progressChanged {
+    if (!_slider.enabled) return;
+    [self showPosition:_slider.value duration:_slider.maximumValue];
+    // VoiceOver adjusts without a touch-down/up pair.
+    if (!_scrubbing) {
+        _scrubTrack = [SGURIString(SGPlayerState().track.URI) copy];
+        [self finishScrubbing];
+    }
+}
+
+- (void)finishScrubbing {
+    NSString *track = SGURIString(SGPlayerState().track.URI);
+    double duration = SGPlayerState().duration;
+    if (_slider.enabled && _scrubTrack.length && [_scrubTrack isEqualToString:track] && isfinite(_slider.value) &&
+        isfinite(duration) && duration > 0 && duration < NSIntegerMax / 1000.0) {
+        _seekPosition = MIN(duration, MAX(0, _slider.value));
+        _seekUntil = CACurrentMediaTime() + 1.5;
+        SGKaraokeSeek((NSInteger)(_seekPosition * 1000));
+    }
+    [self cancelScrubbing];
+}
+
+- (void)cancelScrubbing {
+    _scrubbing = NO;
+    _scrubTrack = nil;
+    [self updateProgress];
+    [self restartRest];
+}
+
+- (BOOL)gestureRecognizer:(UIGestureRecognizer *)recognizer shouldReceiveTouch:(UITouch *)touch {
+    for (UIView *view = touch.view; view && view != self.view; view = view.superview) {
+        if ([view isKindOfClass:UIControl.class]) return NO;
+    }
+    return YES;
+}
+
 - (id<SPTPlayer>)player {
     id player = SGKaraokePlayer();
     return [player conformsToProtocol:@protocol(SPTPlayer)] || [player respondsToSelector:@selector(pause:)] ? player : nil;
@@ -278,18 +443,21 @@ static UIButton *controlButton(NSString *symbol, CGFloat size, NSString *label, 
 
 - (void)togglePlay {
     id<SPTPlayer> player = self.player;
-    if (SGPlayerState().isPaused) [player resume:nil];
-    else [player pause:nil];
+    if (SGPlayerState().isPaused) {
+        if ([player respondsToSelector:@selector(resume:)]) [player resume:nil];
+    } else if ([player respondsToSelector:@selector(pause:)]) [player pause:nil];
     [self restartRest];
 }
 
 - (void)previous {
-    [self.player skipToPreviousTrackWithOptions:nil];
+    id<SPTPlayer> player = self.player;
+    if ([player respondsToSelector:@selector(skipToPreviousTrackWithOptions:)]) [player skipToPreviousTrackWithOptions:nil];
     [self restartRest];
 }
 
 - (void)next {
-    [self.player skipToNextTrackWithOptions:nil];
+    id<SPTPlayer> player = self.player;
+    if ([player respondsToSelector:@selector(skipToNextTrackWithOptions:)]) [player skipToNextTrackWithOptions:nil];
     [self restartRest];
 }
 
@@ -306,7 +474,7 @@ static UIButton *controlButton(NSString *symbol, CGFloat size, NSString *label, 
 
 // The lines on their own, unless VoiceOver needs the controls to be there.
 - (void)rest {
-    if (!_bare && !UIAccessibilityIsVoiceOverRunning()) [self setControlsShown:NO];
+    if (!_bare && !_scrubbing && !UIAccessibilityIsVoiceOverRunning()) [self setControlsShown:NO];
 }
 
 - (void)wake {
@@ -325,7 +493,7 @@ static UIButton *controlButton(NSString *symbol, CGFloat size, NSString *label, 
     // Back at a tap with the Kit's response, from where a fade out is; they go with the slow fade, as the
     // portrait player's do (PlayerLyrics.x).
     SGRAnimate(shown ? SGRMotionRespond : SGRMotionFade, ^{
-        for (UIView *view in @[self->_controls, self->_close, self->_title, self->_artist]) view.alpha = shown ? 1 : 0;
+        for (UIView *view in @[self->_controls, self->_close, self->_title, self->_artist, self->_progress]) view.alpha = shown ? 1 : 0;
         self->_lyrics.extrasHidden = !shown;
     }, nil);
     if (shown) [self restartRest];
@@ -334,7 +502,7 @@ static UIButton *controlButton(NSString *symbol, CGFloat size, NSString *label, 
 - (void)restartRest {
     [_rest invalidate];
     _rest = nil;
-    if (_bare || !SGEnabled(SGRKeyLyricsAutoHide) || SGPlayerState().isPaused || UIAccessibilityIsVoiceOverRunning()) return;
+    if (_bare || _scrubbing || !SGEnabled(SGRKeyLyricsAutoHide) || SGPlayerState().isPaused || UIAccessibilityIsVoiceOverRunning()) return;
     __weak SGRLandscapeLyricsController *weakSelf = self;
     _rest = [NSTimer scheduledTimerWithTimeInterval:kLandscapeRest repeats:NO block:^(NSTimer *timer) {
         // A sheet over the lines (a line's meanings) keeps them up, and the clock runs again behind it.
@@ -380,7 +548,15 @@ static void requestOrientations(UIWindowScene *scene, UIInterfaceOrientationMask
         UIWindowSceneGeometryPreferencesIOS *preferences = [[UIWindowSceneGeometryPreferencesIOS alloc] initWithInterfaceOrientations:mask];
         [scene requestGeometryUpdateWithPreferences:preferences errorHandler:^(NSError *error) {
             SGLog(@"redesign player: the scene did not turn: %@", error.localizedDescription);
-            dispatch_async(dispatch_get_main_queue(), ^{ reveal(window); });
+            dispatch_async(dispatch_get_main_queue(), ^{
+                // A delayed failure for an older window must not close its replacement (or reopen it).
+                if (mask != UIInterfaceOrientationMaskLandscape || !window || window != sg_window) return;
+                if (UIInterfaceOrientationIsLandscape(scene.interfaceOrientation)) reveal(window);
+                else {
+                    sg_shut = YES; // Do not retry on every device notification; upright resets this.
+                    SGRPlayerShowLandscape(NO);
+                }
+            });
         }];
     }
 }
@@ -396,6 +572,9 @@ void SGRPlayerShowLandscape(BOOL show) {
     if (show && (!sg_visiblePlayer || scene.activationState != UISceneActivationStateForegroundActive)) return;
     if (show && !sg_window) {
         answerForOrientations();
+        for (UIWindow *window in scene.windows) {
+            if (window.isKeyWindow) { sg_previousKeyWindow = window; break; }
+        }
         sg_window = [[UIWindow alloc] initWithWindowScene:scene];
         sg_window.windowLevel = UIWindowLevelNormal + 1;
         // The window is the mod's own, so what it presents (Sing's alerts, a line's meanings) is dark too.
@@ -405,10 +584,19 @@ void SGRPlayerShowLandscape(BOOL show) {
         [sg_window makeKeyAndVisible];
         requestOrientations(scene, UIInterfaceOrientationMaskLandscape);
         if (UIInterfaceOrientationIsLandscape(scene.interfaceOrientation)) reveal(sg_window);
+        __weak UIWindow *requestedWindow = sg_window;
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 2 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+            if (!requestedWindow || requestedWindow != sg_window) return;
+            if (UIInterfaceOrientationIsLandscape(scene.interfaceOrientation)) reveal(requestedWindow);
+            else { sg_shut = YES; SGRPlayerShowLandscape(NO); }
+        });
         SGLog(@"redesign player: the lyrics turn sideways");
     } else if (!show && sg_window) {
         UIWindow *window = sg_window;
+        UIWindow *previous = sg_previousKeyWindow;
+        sg_previousKeyWindow = nil;
         sg_window = nil;
+        [(SGRLandscapeLyricsController *)window.rootViewController stopProgress];
         window.userInteractionEnabled = NO;
         // A sheet up over the lines (a line's meanings) goes with them, or it would be left on a hidden window.
         [window.rootViewController dismissViewControllerAnimated:NO completion:nil];
@@ -419,6 +607,11 @@ void SGRPlayerShowLandscape(BOOL show) {
         SGRAnimate(SGRMotionFade, ^{ window.alpha = 0; }, ^(BOOL finished) {
             window.hidden = YES;
             if (sg_window) return;
+            if (previous && !previous.hidden && previous.windowScene == scene) {
+                [previous makeKeyWindow];
+                UIAccessibilityPostNotification(UIAccessibilityScreenChangedNotification, nil);
+                return;
+            }
             for (UIWindow *other in scene.windows) {
                 if (other != window && !other.hidden && other.windowLevel == UIWindowLevelNormal) {
                     [other makeKeyWindow];
@@ -459,6 +652,14 @@ static void orientationChanged(void) {
     dispatch_async(dispatch_get_main_queue(), ^{
         [UIDevice.currentDevice beginGeneratingDeviceOrientationNotifications];
         [NSNotificationCenter.defaultCenter addObserverForName:UIDeviceOrientationDidChangeNotification object:nil queue:nil
+                                                    usingBlock:^(NSNotification *note) {
+            dispatch_async(dispatch_get_main_queue(), ^{ orientationChanged(); });
+        }];
+        [NSNotificationCenter.defaultCenter addObserverForName:UIApplicationDidEnterBackgroundNotification object:nil queue:nil
+                                                    usingBlock:^(NSNotification *note) {
+            dispatch_async(dispatch_get_main_queue(), ^{ SGRPlayerShowLandscape(NO); });
+        }];
+        [NSNotificationCenter.defaultCenter addObserverForName:UIApplicationDidBecomeActiveNotification object:nil queue:nil
                                                     usingBlock:^(NSNotification *note) {
             dispatch_async(dispatch_get_main_queue(), ^{ orientationChanged(); });
         }];

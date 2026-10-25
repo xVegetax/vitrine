@@ -511,5 +511,7 @@
   "Play": "Lire",
   "Pause": "Pause",
   "Previous track": "Titre précédent",
-  "Next track": "Titre suivant"
+  "Next track": "Titre suivant",
+  "Playback position": "Position de lecture",
+  "%@ of %@": "%@ sur %@"
 }

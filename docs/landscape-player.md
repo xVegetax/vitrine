@@ -14,3 +14,24 @@ Validation à faire sur iPhone après compilation :
 - Vérification des zones sûres, VoiceOver, tailles de texte et Réduire les animations.
 
 La compilation ne remplace pas cette vérification sur appareil.
+
+## Progression et commandes
+
+La barre horizontale affiche le temps écoulé et le temps restant. Le glissement prévisualise la
+position ; le déplacement est envoyé une seule fois au relâchement. Une annulation ou un changement
+de titre pendant le glissement n’envoie pas de déplacement. Une durée ou une position inconnue
+désactive le curseur. VoiceOver peut ajuster la position par pas de cinq secondes.
+
+Le curseur garde une zone de toucher de 44 points. Les contrôles restent visibles pendant le
+glissement et lorsque VoiceOver est actif. Ils suivent le masquage existant des paroles le reste
+du temps ; les commandes précédent, lecture/pause, suivant et sortie restent présentes.
+
+Un refus de rotation ou une demande qui ne produit aucune orientation paysage ferme la fenêtre
+supplémentaire et restitue la fenêtre précédente. Une ancienne réponse de rotation ne doit pas
+fermer une fenêtre plus récente. Le passage en arrière-plan ferme également le plein écran.
+
+Validation sur Mac : lancer les scénarios `landscape` et `landscape-denied` de `harness/player`.
+Les scénarios existants `scroll`, `immersive` et `motion` restent à exécuter en régression.
+Sur iPhone, vérifier aussi les deux sens de rotation, le verrouillage de rotation, les retournements
+rapides, les morceaux sans durée, Spotify Connect, un changement de piste pendant un glissement,
+VoiceOver français/anglais, le retour d’arrière-plan et les deux interfaces.
