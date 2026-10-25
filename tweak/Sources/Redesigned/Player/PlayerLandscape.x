@@ -378,7 +378,7 @@ static NSString *clockText(double seconds) {
     }
     double duration = state.duration;
     NSInteger ms = SGKaraokePositionMs();
-    BOOL valid = track.length && isfinite(duration) && duration > 0 && duration < NSIntegerMax / 1000.0 && ms >= 0;
+    BOOL valid = track.length && isfinite(duration) && duration > 0 && duration < (double)(NSIntegerMax / 1000) && ms >= 0;
     _slider.enabled = valid && [SGKaraokePlayer() respondsToSelector:@selector(seekTo:)];
     if (_scrubbing) return;
     _slider.maximumValue = valid ? duration : 1;
@@ -414,7 +414,7 @@ static NSString *clockText(double seconds) {
     NSString *track = SGURIString(SGPlayerState().track.URI);
     double duration = SGPlayerState().duration;
     if (_slider.enabled && _scrubTrack.length && [_scrubTrack isEqualToString:track] && isfinite(_slider.value) &&
-        isfinite(duration) && duration > 0 && duration < NSIntegerMax / 1000.0) {
+        isfinite(duration) && duration > 0 && duration < (double)(NSIntegerMax / 1000)) {
         _seekPosition = MIN(duration, MAX(0, _slider.value));
         _seekUntil = CACurrentMediaTime() + 1.5;
         SGKaraokeSeek((NSInteger)(_seekPosition * 1000));
